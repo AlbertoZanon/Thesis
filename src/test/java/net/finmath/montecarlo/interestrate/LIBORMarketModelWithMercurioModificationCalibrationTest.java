@@ -50,6 +50,7 @@ import net.finmath.montecarlo.BrownianMotionView;
 import net.finmath.montecarlo.RandomVariableFactory;
 import net.finmath.montecarlo.RandomVariableFromArrayFactory;
 import net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModel;
+import net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModelWithMercurioModification;
 import net.finmath.montecarlo.interestrate.models.covariance.AbstractLIBORCovarianceModelParametric;
 import net.finmath.montecarlo.interestrate.models.covariance.BlendedLocalVolatilityModel;
 import net.finmath.montecarlo.interestrate.models.covariance.DisplacedLocalVolatilityModel;
@@ -123,7 +124,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 
 
 	
-	// 						PART 2
+	// 						PART 2 
 	/**
 	 * Brute force Monte-Carlo calibration of swaptions.
 	 *
@@ -136,7 +137,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 	@Test
 	public void testATMSwaptionCalibration() throws CalculationException, SolverException {
 
-		final int numberOfPaths		= 500;
+		final int numberOfPaths		= 1000;
 		final int numberOfFactors	= 1;
 
 		final long millisCurvesStart = System.currentTimeMillis();
@@ -270,7 +271,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		//final BrownianMotion brownianMotion = new net.finmath.montecarlo.BrownianMotionCudaWithHostRandomVariable(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */);
 		//final BrownianMotion brownianMotion = new net.finmath.montecarlo.BrownianMotionCudaWithRandomVariableCuda(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */);
 
-		final LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelPiecewiseConstant(timeDiscretizationFromArray, liborPeriodDiscretization, new TimeDiscretizationFromArray(0.00, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 40.0), new TimeDiscretizationFromArray(0.00, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 40.0), 0.50 / 100);
+		final LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelPiecewiseConstantWithMercurioModification(timeDiscretizationFromArray, liborPeriodDiscretization, new TimeDiscretizationFromArray(0.00, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 40.0), new TimeDiscretizationFromArray(0.00, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 40.0), 0.50 / 100);
 		final LIBORCorrelationModel correlationModel = new LIBORCorrelationModelExponentialDecay(timeDiscretizationFromArray, liborPeriodDiscretization, numberOfFactors, 0.05, false);
 		// Create a covariance model
 		//AbstractLIBORCovarianceModelParametric covarianceModelParametric = new LIBORCovarianceModelExponentialForm5Param(timeDiscretizationFromArray, liborPeriodDiscretization, numberOfFactors, new double[] { 0.20/100.0, 0.05/100.0, 0.10, 0.05/100.0, 0.10} );
@@ -278,8 +279,16 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 
 		// Create blended local volatility model with fixed parameter (0=lognormal, > 1 = almost a normal model).
 		final AbstractLIBORCovarianceModelParametric covarianceModelDisplaced = new DisplacedLocalVolatilityModel(covarianceModelParametric, 1.0/0.25, false /* isCalibrateable */);
-		final AbstractLIBORCovarianceModelParametric covarianceModelReducedVolatility = new VolatilityReductionMercurioModel(covarianceModelParametric);
-
+		final AbstractLIBORCovarianceModelParametric covarianceModelReducedVolatility = new VolatilityReductionMercurioModel(covarianceModelDisplaced);
+//results: n' of paths 500
+//test fallisce con l'unica modifica di LIBORVolatilityModelPiecewiseConstantWithMercurioModification
+// ma succeed se poi inseriisci anche VolatilityReductionMercurioModel(covarianceModelParametric) 
+		
+// fallisce con covarianceModelReducedVolatility = new VolatilityReductionMercurioModel(covarianceModelDisplaced); mean deviation 0.069%
+	
+// fallisce ancora inserendo anche LIBORMarketModelFromCovarianceModelWithMercurioModification  (usa ancora VolatilityReductionMercurioModel(covarianceModelDisplaced) ); mean deviation 0.113%
+// stesso test ma con 1000 paths: fallisce ancora Mean Deviation: 0.192% ( più grande di prima )
+		
 		// Set model properties
 		final Map<String, Object> properties = new HashMap<>();
 		
@@ -288,10 +297,10 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 
 
 		// Choose the simulation measure
-		properties.put("measure", LIBORMarketModelFromCovarianceModel.Measure.SPOT.name());
+		properties.put("measure", LIBORMarketModelFromCovarianceModelWithMercurioModification.Measure.SPOT.name());
 
 		// Choose normal state space for the Euler scheme (the covariance model above carries a linear local volatility model, such that the resulting model is log-normal).
-		properties.put("stateSpace", LIBORMarketModelFromCovarianceModel.StateSpace.NORMAL.name());
+		properties.put("stateSpace", LIBORMarketModelFromCovarianceModelWithMercurioModification.StateSpace.NORMAL.name());
 
 		// Set calibration properties (should use our brownianMotion for calibration - needed to have to right correlation).
 		final Double accuracy = new Double(1E-8);	// Lower accuracy to reduce runtime of the unit test
@@ -326,20 +335,20 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		for(int i=0; i<calibrationItemNames.size(); i++) {
 			calibrationItemsLMM[i] = new CalibrationProduct(calibrationProducts.get(i).getProduct(),calibrationProducts.get(i).getTargetValue(),calibrationProducts.get(i).getWeight());
 		}
-		final LIBORMarketModel liborMarketModelCalibrated = LIBORMarketModelFromCovarianceModel.of(
+		final LIBORMarketModel liborMarketModelCalibrated = LIBORMarketModelFromCovarianceModelWithMercurioModification.of(
 				liborPeriodDiscretization,
 				curveModel,
 				forwardCurve,
 				new DiscountCurveFromForwardCurve(forwardCurve),
 				randomVariableFactory,
-				covarianceModelDisplaced,
+				covarianceModelReducedVolatility,
 				calibrationItemsLMM, properties);
 
 		final long millisCalibrationEnd = System.currentTimeMillis();
 		
 //-------------------------------------------------------------------------------- fine calibrazione volatility
 		System.out.println("\nCalibrated parameters are:");
-		final double[] param = ((AbstractLIBORCovarianceModelParametric)((LIBORMarketModelFromCovarianceModel) liborMarketModelCalibrated).getCovarianceModel()).getParameterAsDouble();
+		final double[] param = ((AbstractLIBORCovarianceModelParametric)((LIBORMarketModelFromCovarianceModelWithMercurioModification) liborMarketModelCalibrated).getCovarianceModel()).getParameterAsDouble();
 		for (final double p : param) {
 			System.out.println(p);
 		}
@@ -378,10 +387,10 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 			fail("Serialization failed with exception " + e.getMessage());
 		}
 
-		LIBORMarketModelFromCovarianceModel liborMarketModelFromSerialization = null;
+		LIBORMarketModelFromCovarianceModelWithMercurioModification liborMarketModelFromSerialization = null;
 		try {
 			final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(lmmSerialized) );
-			liborMarketModelFromSerialization = (LIBORMarketModelFromCovarianceModel)ois.readObject();
+			liborMarketModelFromSerialization = (LIBORMarketModelFromCovarianceModelWithMercurioModification)ois.readObject();
 		} catch (IOException | ClassNotFoundException e) {
 			fail("Deserialization failed with exception " + e.getMessage());
 		}

@@ -145,7 +145,7 @@ import net.finmath.time.TimeDiscretizationFromArray;
  * @see net.finmath.montecarlo.interestrate.models.covariance.AbstractLIBORCovarianceModel The abstract covariance model plug ins.
  * @see net.finmath.montecarlo.interestrate.models.covariance.AbstractLIBORCovarianceModelParametric A parametic covariance model including a generic calibration algorithm.
  */
-public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends AbstractProcessModel implements LIBORMarketModel, Serializable {
+public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends AbstractProcessModel implements LIBORMarketModel, Serializable {
 
 	private static final long serialVersionUID = 4166077559001066615L;
 
@@ -243,7 +243,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @param properties Key value map specifying properties like <code>measure</code> and <code>stateSpace</code>.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final AnalyticModel			analyticModel,
 			final ForwardCurve			forwardRateCurve,
@@ -345,7 +345,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @return A new instance of LIBORMarketModelFromCovarianceModel, possibly calibrated.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public static LIBORMarketModelFromCovarianceModelWithMercurioModifcation of(
+	public static LIBORMarketModelFromCovarianceModelWithMercurioModification of(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final AnalyticModel			analyticModel,
 			final ForwardCurve			forwardRateCurve,
@@ -356,7 +356,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 			final Map<String, ?>					properties
 			) throws CalculationException {
 
-		final LIBORMarketModelFromCovarianceModelWithMercurioModifcation model = new LIBORMarketModelFromCovarianceModelWithMercurioModifcation(liborPeriodDiscretization, analyticModel, forwardRateCurve, discountCurve, abstractRandomVariableFactory, covarianceModel, properties);
+		final LIBORMarketModelFromCovarianceModelWithMercurioModification model = new LIBORMarketModelFromCovarianceModelWithMercurioModification(liborPeriodDiscretization, analyticModel, forwardRateCurve, discountCurve, abstractRandomVariableFactory, covarianceModel, properties);
 
 		// Perform calibration, if data is given
 		if(calibrationProducts != null && calibrationProducts.length > 0) {
@@ -375,7 +375,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 
 			final LIBORCovarianceModel covarianceModelCalibrated = covarianceModelParametric.getCloneCalibrated(model, calibrationProducts, calibrationParameters);
 
-			final LIBORMarketModelFromCovarianceModelWithMercurioModifcation modelCalibrated = model.getCloneWithModifiedCovarianceModel(covarianceModelCalibrated);
+			final LIBORMarketModelFromCovarianceModelWithMercurioModification modelCalibrated = model.getCloneWithModifiedCovarianceModel(covarianceModelCalibrated);
 
 			return modelCalibrated;
 		}
@@ -450,7 +450,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @deprecated Use LIBORMarketModelFromCovarianceModel.of() instead.
 	 */
 	@Deprecated
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final AnalyticModel			analyticModel,
 			final ForwardCurve			forwardRateCurve,
@@ -568,7 +568,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @deprecated Use LIBORMarketModelFromCovarianceModel.of() instead.
 	 */
 	@Deprecated
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final AnalyticModel				analyticModel,
 			final ForwardCurve				forwardRateCurve,
@@ -588,7 +588,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @param covarianceModel The covariance model to use.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization		liborPeriodDiscretization,
 			final ForwardCurve			forwardRateCurve,
 			final LIBORCovarianceModel	covarianceModel
@@ -605,7 +605,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @param covarianceModel The covariance model to use.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization		liborPeriodDiscretization,
 			final ForwardCurve			forwardRateCurve,
 			final DiscountCurve			discountCurve,
@@ -624,7 +624,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @param swaptionMarketData The set of swaption values to calibrate to.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final ForwardCurve				forwardRateCurve,
 			final LIBORCovarianceModel		covarianceModel,
@@ -643,7 +643,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @param swaptionMarketData The set of swaption values to calibrate to.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final ForwardCurve				forwardRateCurve,
 			final DiscountCurve				discountCurve,
@@ -664,7 +664,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @param properties Key value map specifying properties like <code>measure</code> and <code>stateSpace</code>.
 	 * @throws net.finmath.exception.CalculationException Thrown if the valuation fails, specific cause may be available via the <code>cause()</code> method.
 	 */
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final ForwardCurve				forwardRateCurve,
 			final DiscountCurve				discountCurve,
@@ -750,7 +750,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @deprecated Use LIBORMarketModelFromCovarianceModel.of() instead.
 	 */
 	@Deprecated
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation(
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification(
 			final TimeDiscretization			liborPeriodDiscretization,
 			final ForwardCurve				forwardRateCurve,
 			final DiscountCurve				discountCurve,
@@ -1107,8 +1107,8 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * If the model is written without a state space transformation (in its orignial coordinates) then \(\lambda_{j} \cdot \lambda_{l} = \sum_{k=1}^m \lambda_{j,k} \lambda_{l,k} = L_{j} L_{l} \sigma_{j} \sigma_{l} \rho_{j,l} \).
 	 *
 	 *
-	 * @see net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModelWithMercurioModifcation#getNumeraire(double) The calculation of the drift is consistent with the calculation of the numeraire in <code>getNumeraire</code>.
-	 * @see net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModelWithMercurioModifcation#getFactorLoading(int, int, RandomVariable[]) The factor loading \( \lambda_{j,k} \).
+	 * @see net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModelWithMercurioModification#getNumeraire(double) The calculation of the drift is consistent with the calculation of the numeraire in <code>getNumeraire</code>.
+	 * @see net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModelWithMercurioModification#getFactorLoading(int, int, RandomVariable[]) The factor loading \( \lambda_{j,k} \).
 	 *
 	 * @param timeIndex Time index <i>i</i> for which the drift should be returned <i>&mu;(t<sub>i</sub>)</i>.
 	 * @param realizationAtTimeIndex Time current forward rate vector at time index <i>i</i> which should be used in the calculation.
@@ -1636,7 +1636,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 			properties.put("stateSpace",	stateSpace.name());
 			properties.put("interpolationMethod", interpolationMethod.name());
 			properties.put("liborCap", liborCap);
-			return LIBORMarketModelFromCovarianceModelWithMercurioModifcation.of(getLiborPeriodDiscretization(), getAnalyticModel(), getForwardRateCurve(), getDiscountCurve(), abstractRandomVariableFactory, covarianceModel, null, properties);
+			return LIBORMarketModelFromCovarianceModelWithMercurioModification.of(getLiborPeriodDiscretization(), getAnalyticModel(), getForwardRateCurve(), getDiscountCurve(), abstractRandomVariableFactory, covarianceModel, null, properties);
 		} catch (final CalculationException e) {
 			return null;
 		}
@@ -1647,14 +1647,14 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 	 * @return A new <code>LIBORMarketModelFromCovarianceModel</code> using the specified covariance model.
 	 */
 	@Override
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation getCloneWithModifiedCovarianceModel(final LIBORCovarianceModel covarianceModel) {
-		final LIBORMarketModelFromCovarianceModelWithMercurioModifcation model = (LIBORMarketModelFromCovarianceModelWithMercurioModifcation)this.clone();
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification getCloneWithModifiedCovarianceModel(final LIBORCovarianceModel covarianceModel) {
+		final LIBORMarketModelFromCovarianceModelWithMercurioModification model = (LIBORMarketModelFromCovarianceModelWithMercurioModification)this.clone();
 		model.covarianceModel = covarianceModel;
 		return model;
 	}
 
 	@Override
-	public LIBORMarketModelFromCovarianceModelWithMercurioModifcation getCloneWithModifiedData(final Map<String, Object> dataModified) throws CalculationException {
+	public LIBORMarketModelFromCovarianceModelWithMercurioModification getCloneWithModifiedData(final Map<String, Object> dataModified) throws CalculationException {
 		RandomVariableFactory 	abstractRandomVariableFactory	= this.abstractRandomVariableFactory;
 		TimeDiscretization		liborPeriodDiscretization	= this.liborPeriodDiscretization;
 		AnalyticModel			analyticModel				= curveModel;
@@ -1685,7 +1685,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModifcation extends 
 			}
 		}
 
-		final LIBORMarketModelFromCovarianceModelWithMercurioModifcation newModel = LIBORMarketModelFromCovarianceModelWithMercurioModifcation.of(liborPeriodDiscretization, analyticModel, forwardRateCurve, discountCurve, abstractRandomVariableFactory, covarianceModel, null, properties);
+		final LIBORMarketModelFromCovarianceModelWithMercurioModification newModel = LIBORMarketModelFromCovarianceModelWithMercurioModification.of(liborPeriodDiscretization, analyticModel, forwardRateCurve, discountCurve, abstractRandomVariableFactory, covarianceModel, null, properties);
 		return newModel;
 	}
 
