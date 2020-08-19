@@ -1119,9 +1119,12 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 //------->MERCURIO
 //------->	
 		final double	time				= getTime(timeIndex);
+	//	int		firstLiborIndex		= this.getLiborPeriodIndex(time)+1;
 		int		firstLiborIndex		= this.getLiborPeriodIndex(time); // MERCURIO: senza il + 1 (in mercurio se t=T_i il tasso non è ancora fixed, deve arrivare fino a T_{i+1}
 		if(firstLiborIndex<0) {
-			firstLiborIndex = -firstLiborIndex-1;				   	  // MERCURIO: senza il + 1 (perchè hai anche rimosso il + 1 sopra)
+			firstLiborIndex = -firstLiborIndex-1-1;				   	  // MERCURIO: sostituisci il + 1 con - 1, pensaci!
+	//	 firstLiborIndex = -firstLiborIndex-1 + 1;
+	//	 System.out.println("timeIndex: " + timeIndex + "   time: " + time + "   firstLiborIndex: " + firstLiborIndex );
 		}
 
 		
@@ -1296,7 +1299,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 			return getLIBOR(timeIndex, periodStartIndex);
 		}
 
-		// The requested LIBOR is not a model primitive. We need to calculate it (slow!) (penso sia tipo se richiedi LIBOR(T_i, T_{i+2}
+		// The requested LIBOR is not a model primitive. We need to calculate it (slow!)
 		RandomVariable accrualAccount = abstractRandomVariableFactory.createRandomVariable(1.0);
 
 		// Calculate the value of the forward bond
@@ -1317,6 +1320,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 	public RandomVariable getLIBOR(final int timeIndex, final int liborIndex) throws CalculationException
 	{
 		// This method is just a synonym - call getProcessValue of super class
+		
 		return getProcessValue(timeIndex, liborIndex);
 	}
 

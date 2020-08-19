@@ -88,7 +88,8 @@ public class LIBORVolatilityModelPiecewiseConstantWithMercurioModification exten
 		 * Build index map
 		 */
 		//	final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);
-		final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);		int volatilityIndex = 0;
+		final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);	
+		int volatilityIndex = 0;
 		for(int simulationTime=0; simulationTime<simulationTimeDiscretization.getNumberOfTimes(); simulationTime++) {
 			final Map<Integer, Integer> timeToMaturityIndexing = new ConcurrentHashMap<>();
 			for(int timeToMaturity=0; timeToMaturity<timeToMaturityDiscretization.getNumberOfTimes(); timeToMaturity++) {
@@ -202,8 +203,7 @@ public class LIBORVolatilityModelPiecewiseConstantWithMercurioModification exten
 	@Override
 	public RandomVariable getVolatility(final int timeIndex, final int liborIndex) {
 		// Create a very simple volatility model here
-		final double time             = getTimeDiscretization().getTime(timeIndex);
-		
+		final double time             = getTimeDiscretization().getTime(timeIndex);	
 //----->	
 //MERCURIO:
 //final double maturity         = getLiborPeriodDiscretization().getTime(liborIndex);

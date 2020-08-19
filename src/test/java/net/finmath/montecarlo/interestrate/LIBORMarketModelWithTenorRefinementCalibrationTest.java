@@ -72,6 +72,7 @@ import net.finmath.optimizer.Optimizer;
 import net.finmath.optimizer.OptimizerFactory;
 import net.finmath.optimizer.OptimizerFactoryLevenbergMarquardt;
 import net.finmath.optimizer.SolverException;
+import net.finmath.stochastic.RandomVariable;
 import net.finmath.time.Schedule;
 import net.finmath.time.ScheduleGenerator;
 import net.finmath.time.TimeDiscretization;
@@ -152,7 +153,7 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 		final AnalyticModel curveModel = getCalibratedCurve();
 
 		// Create the forward curve (initial value of the LIBOR market model)
-		final ForwardCurve forwardCurve = curveModel.getForwardCurve("ForwardCurveFromDiscountCurve(discountCurve-EUR,6M)");
+		final ForwardCurve forwardCurve = curveModel.getForwardCurve("ForwardCurveFromDiscountCurve(discountCurve-EUR,3M)");
 
 		final DiscountCurve discountCurve = curveModel.getDiscountCurve("discountCurve-EUR");
 
@@ -213,7 +214,7 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 				0.0049482, 0.004947, 0.0049805, 0.0049951, 0.0050215, 0.0049849, 0.0049111, 0.0048498, 0.0047879, 0.0047688, 0.0044943, 0.0042786, 0.0041191, 0.0039756
 		};
 
-		final LocalDate referenceDate = LocalDate.of(2020, Month.AUGUST, 31);
+		final LocalDate referenceDate = LocalDate.of(2020, Month.JULY, 31);
 		final BusinessdayCalendarExcludingTARGETHolidays cal = new BusinessdayCalendarExcludingTARGETHolidays();
 		final DayCountConvention_ACT_365 modelDC = new DayCountConvention_ACT_365();
 		for(int i=0; i<atmNormalVolatilities.length; i++ ) {
@@ -270,7 +271,7 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 
 		final int test = 0;			// 0 LMM with refinment, 1 LMMM, 2 HW 1 mr param, 3 HW with vector mr
 		LIBORModelMonteCarloSimulationModel simulationCalibrated = null;
-		if(test == 0) {
+	//	if(test == 0) {
 			
 			final TimeDiscretization optionMaturityDiscretization = new TimeDiscretizationFromArray(0.0, 0.25, 0.50, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0);
 			//optionMaturityDiscretization = simulationTimeDiscretization
@@ -312,7 +313,7 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 			// nella riga precedente era stato creato con i tenorTimeScaling factor = 0.
 			termStructureCovarianceModel = termStructureCovarianceModel.getCloneWithModifiedParameters(paramTimeScalingVolParam);
 			double[] bestParameters = null;
-			for(int i = 0; i<1; i++) {
+			int i = 0;
 				// Set model properties
 				final Map<String, Object> properties = new HashMap<>();
 
@@ -381,14 +382,18 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 
 				final EulerSchemeFromProcessModel process = new EulerSchemeFromProcessModel(brownianMotion);
 				simulationCalibrated = new LIBORMonteCarloSimulationFromTermStructureModel(liborMarketModelCalibrated, process);
-			}
-		}
-
+	//		}
+		//}
+				
+	    // RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(dt, dt, dt);
+		// double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
+		// System.out.println("volatilityBackwardLookingRate: " + volatilityBackwardLookingRate);
+				
 
 		System.out.println("\nValuation on calibrated model:");
 		double deviationSum			= 0.0;
 		double deviationSquaredSum	= 0.0;
-		for (int i = 0; i < calibrationProducts.size(); i++) {
+		for ( i = 0; i < calibrationProducts.size(); i++) {
 			final AbstractLIBORMonteCarloProduct calibrationProduct = calibrationProducts.get(i).getProduct();
 			try {
 				final double valueModel = calibrationProduct.getValue(simulationCalibrated);
@@ -407,21 +412,24 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 		System.out.println("__________________________________________________________________________________________\n");
 
 		Assert.assertTrue(Math.abs(averageDeviation) < 1E-2);
+		
 	}
 
+		
+		
 	public AnalyticModel getCalibratedCurve() throws SolverException {
-		final String[] maturity					= { "6M", "1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "11Y", "12Y", "15Y", "20Y", "25Y", "30Y", "35Y", "40Y", "45Y", "50Y" };
-		final String[] frequency				= { "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual" };
-		final String[] frequencyFloat			= { "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual", "semiannual" };
-		final String[] daycountConventions		= { "ACT/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360" };
-		final String[] daycountConventionsFloat	= { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360" };
-		final double[] rates					= { -0.00216 ,-0.00208 ,-0.00222 ,-0.00216 ,-0.0019 ,-0.0014 ,-0.00072 ,0.00011 ,0.00103 ,0.00196 ,0.00285 ,0.00367 ,0.0044 ,0.00604 ,0.00733 ,0.00767 ,0.00773 ,0.00765 ,0.00752 ,0.007138 ,0.007 };
+		final String[] maturity					= { "12M", "15M", "18M", "21M", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "12Y", "15Y", "20Y", "25Y", "30Y", "40Y", "50Y" };
+		final String[] frequency				= { "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
+		final String[] frequencyFloat			= { "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly"};
+		final String[] daycountConventions		= { "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360"};
+		final String[] daycountConventionsFloat	= { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
+		final double[] rates					= { -0.00478, -0.00484, -0.00489, -0.00489, -0.00492, -0.00492, -0.0048, -0.00459, -0.00431, -0.00398, -0.00363, -0.00323, -0.00281, -0.00199, -0.00098, -0.00025, -0.00033, -0.00068, -0.00129, -0.00182 };
 
 		final HashMap<String, Object> parameters = new HashMap<>();
 
-		parameters.put("referenceDate", LocalDate.of(2016, Month.SEPTEMBER, 30));
+		parameters.put("referenceDate", LocalDate.of(2020, Month.JULY, 31));
 		parameters.put("currency", "EUR");
-		parameters.put("forwardCurveTenor", "6M");
+		parameters.put("forwardCurveTenor", "3M");
 		parameters.put("maturities", maturity);
 		parameters.put("fixLegFrequencies", frequency);
 		parameters.put("floatLegFrequencies", frequencyFloat);
