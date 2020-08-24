@@ -44,8 +44,7 @@ public class LIBORVolatilityModelPiecewiseConstantWithMercurioModification exten
 		
 		//SI MERCURIO: on getVolatility()
 		//NO MERCURIO: siccome il LIBOR si ferma alla fine allora maxMaturity è proprio l'ultimo periodo definito
-		//		//	dovrebbe essere giusto getNumberOfTimes()-1, questo è già l'ultimissimo valore dell'array liborPeriodDiscretization
-		//	final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);
+		//		//	è giusto getNumberOfTimes()-1, questo è già l'ultimissimo valore dell'array liborPeriodDiscretization
 		final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);
 		int volatilityIndex = 0;
 		for(int simulationTime=0; simulationTime<simulationTimeDiscretization.getNumberOfTimes(); simulationTime++) {
@@ -87,7 +86,6 @@ public class LIBORVolatilityModelPiecewiseConstantWithMercurioModification exten
 		/*
 		 * Build index map
 		 */
-		//	final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);
 		final double maxMaturity = liborPeriodDiscretization.getTime(liborPeriodDiscretization.getNumberOfTimes()-1);	
 		int volatilityIndex = 0;
 		for(int simulationTime=0; simulationTime<simulationTimeDiscretization.getNumberOfTimes(); simulationTime++) {
@@ -202,7 +200,6 @@ public class LIBORVolatilityModelPiecewiseConstantWithMercurioModification exten
 
 	@Override
 	public RandomVariable getVolatility(final int timeIndex, final int liborIndex) {
-		// Create a very simple volatility model here
 		final double time             = getTimeDiscretization().getTime(timeIndex);	
 //----->	
 //MERCURIO:

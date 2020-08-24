@@ -1239,7 +1239,6 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 	}
 
 //------->MERCURIO
-//-------> 		
 	@Override
 	public RandomVariable getLIBOR(double time, final double periodStart, final double periodEnd) throws CalculationException
 	{
@@ -1248,7 +1247,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 
 		// If time is beyond fixing, use the fixing time.
 	
-		//------->MERCURIO		
+//------->MERCURIO		
 		//time = Math.min(time, periodStart);
 		time = Math.min(time, periodEnd);
 		
@@ -1334,14 +1333,21 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 	 * @return The interpolated forward rate.
 	 * @throws CalculationException Thrown if valuation failed.
 	 */
+//------->MERCURIO		
 	private RandomVariable getOnePlusInterpolatedLIBORDt(int timeIndex, final double periodStartTime, final int liborPeriodIndex) throws CalculationException
 	{
 		final double tenorPeriodStartTime       = getLiborPeriod(liborPeriodIndex);
 		final double tenorPeriodEndTime         = getLiborPeriod(liborPeriodIndex + 1);
 		final double tenorDt                    = tenorPeriodEndTime - tenorPeriodStartTime;
-		if(tenorPeriodStartTime < getTime(timeIndex)) {
+
+//------->MERCURIO		
+//		if(tenorPeriodStartTime < getTime(timeIndex)) {
+		if(tenorPeriodEndTime < getTime(timeIndex)) {
+
 			// Fixed at Long LIBOR period Start.
-			timeIndex  = Math.min(timeIndex, getTimeIndex(tenorPeriodStartTime));
+//------->MERCURIO		
+//			timeIndex  = Math.min(timeIndex, getTimeIndex(tenorPeriodStartTime));
+			timeIndex  = Math.min(timeIndex, getTimeIndex(tenorPeriodEndTime));
 			if(timeIndex < 0) {
 				//				timeIndex = -timeIndex-2;			// mapping to last known fixing.
 				throw new IllegalArgumentException("Tenor discretization not part of time discretization.");
@@ -1441,7 +1447,8 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 		default: throw new IllegalArgumentException("Method for enum " + interpolationMethod.name() + " not implemented!");
 		}
 	}
-
+	
+	//----->MERCURIO 
 	private RandomVariable getInterpolationDriftAdjustmentEvaluated(final int evaluationTimeIndex, final int liborIndex) throws CalculationException
 	{
 
@@ -1484,7 +1491,9 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 			final RandomVariable[] realizationsAtTimeIndex = new RandomVariable[getNumberOfLibors()];
 			for(int liborIndexForRealization = 0; liborIndexForRealization < getNumberOfLibors(); liborIndexForRealization++)
 			{
-				int evaluationTimeIndexForRealizations = Math.min(sumTimeIndex, getTimeIndex(getLiborPeriod(liborIndexForRealization)));
+//----->MERCURIO 
+//				int evaluationTimeIndexForRealizations = Math.min(sumTimeIndex, getTimeIndex(getLiborPeriod(liborIndexForRealization)));
+				int evaluationTimeIndexForRealizations = Math.min(sumTimeIndex, getTimeIndex(getLiborPeriod(liborIndexForRealization+1)));
 				if(evaluationTimeIndexForRealizations < 0)
 				{
 					evaluationTimeIndexForRealizations = - evaluationTimeIndexForRealizations - 2;
@@ -1556,6 +1565,7 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 	}
 
 	@Override
+//----->MERCURIO 
 	public double[][][] getIntegratedLIBORCovariance() {
 		synchronized (integratedLIBORCovarianceLazyInitLock) {
 			if(integratedLIBORCovariance == null) {
@@ -1575,7 +1585,9 @@ public class LIBORMarketModelFromCovarianceModelWithMercurioModification extends
 						// Sum the libor cross terms (use symmetry)
 						for(int componentIndex2 = componentIndex1; componentIndex2 < liborPeriodDiscretization.getNumberOfTimeSteps(); componentIndex2++) {
 							double integratedLIBORCovarianceValue = 0.0;
-							if(getLiborPeriod(componentIndex1) > getTime(timeIndex)) {
+							
+//----->MERCURIO				if(getLiborPeriod(componentIndex1) > getTime(timeIndex)) {
+								if(getLiborPeriod(componentIndex1+1) > getTime(timeIndex)) {
 								final RandomVariable[] factorLoadingOfComponent2 = factorLoadings[componentIndex2];
 								for(int factorIndex = 0; factorIndex < getNumberOfFactors(); factorIndex++) {
 									integratedLIBORCovarianceValue += factorLoadingOfComponent1[factorIndex].get(0) * factorLoadingOfComponent2[factorIndex].get(0) * dt;

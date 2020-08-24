@@ -85,7 +85,7 @@ public class LIBORCovarianceModelFromVolatilityAndCorrelation extends AbstractLI
 		final RandomVariable volatilityOfComponent1 = volatilityModel.getVolatility(timeIndex, component1);
 		final RandomVariable volatilityOfComponent2 = volatilityModel.getVolatility(timeIndex, component2);
 
-		final double					correlationOfComponent1And2 = correlationModel.getCorrelation(timeIndex, component1, component2);
+		final double correlationOfComponent1And2 = correlationModel.getCorrelation(timeIndex, component1, component2);
 
 		final RandomVariable covariance = volatilityOfComponent1.mult(volatilityOfComponent2).mult(correlationOfComponent1And2);
 
