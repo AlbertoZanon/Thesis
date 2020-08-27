@@ -432,25 +432,24 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 
 		
 		
-	public AnalyticModel getCalibratedCurve() throws SolverException {
-		final String[] maturity					= { "12M", "15M", "18M", "21M", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "12Y", "15Y", "20Y", "25Y", "30Y", "40Y", "50Y" };
-		final String[] frequency				= { "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
-		final String[] frequencyFloat			= { "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly"};
-		final String[] daycountConventions		= { "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360"};
-		final String[] daycountConventionsFloat	= { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
-		final double[] rates					= { -0.00478, -0.00484, -0.00489, -0.00489, -0.00492, -0.00492, -0.0048, -0.00459, -0.00431, -0.00398, -0.00363, -0.00323, -0.00281, -0.00199, -0.00098, -0.00025, -0.00033, -0.00068, -0.00129, -0.00182 };
+		public AnalyticModel getCalibratedCurve() throws SolverException {
+			final String[] maturity					= { "1D", "7D", "14D", "21D", "1M", "2M", "3M", "4M", "5M", "6M", "7M", "8M", "9M", "12M", "15M", "18M", "21M", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "11Y", "12Y", "15Y", "20Y", "25Y", "30Y", "40Y", "50Y" };
+			final String[] frequency				= { "tenor", "tenor", "tenor",  "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
+			final String[] frequencyFloat			= { "tenor", "tenor", "tenor",  "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
+			final String[] daycountConventions	    = { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
+			final String[] daycountConventionsFloat	= { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
+			final double[] rates					= { -0.0055, -0.00553, -0.00553, -0.00553, -0.00553, -0.00555, -0.00556, -0.00559, -0.00564, -0.00568, -0.00572, -0.00577, -0.00581, -0.00592, -0.00601, -0.00608, -0.00613, -0.00619, -0.00627, -0.00622, -0.00606, -0.00582, -0.00553, -0.00519, -0.00482, -0.00442, -0.00402, -0.00362, -0.00261, -0.00189, -0.00197, -0.0023, -0.00286, -0.00333};
+			final HashMap<String, Object> parameters = new HashMap<>();
 
-		final HashMap<String, Object> parameters = new HashMap<>();
-
-		parameters.put("referenceDate", LocalDate.of(2020, Month.JULY, 31));
-		parameters.put("currency", "EUR");
-		parameters.put("forwardCurveTenor", "3M");
-		parameters.put("maturities", maturity);
-		parameters.put("fixLegFrequencies", frequency);
-		parameters.put("floatLegFrequencies", frequencyFloat);
-		parameters.put("fixLegDaycountConventions", daycountConventions);
-		parameters.put("floatLegDaycountConventions", daycountConventionsFloat);
-		parameters.put("rates", rates);
+			parameters.put("referenceDate", LocalDate.of(2020, Month.JULY, 31));
+			parameters.put("currency", "EUR");
+			parameters.put("forwardCurveTenor", "1D");
+			parameters.put("maturities", maturity);
+			parameters.put("fixLegFrequencies", frequency);
+			parameters.put("floatLegFrequencies", frequencyFloat);
+			parameters.put("fixLegDaycountConventions", daycountConventions);
+			parameters.put("floatLegDaycountConventions", daycountConventionsFloat);
+			parameters.put("rates", rates);
 
 		return getCalibratedCurve(null, parameters);
 	}

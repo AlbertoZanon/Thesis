@@ -1,5 +1,6 @@
 package net.finmath.montecarlo.interestrate;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.HashMap;
@@ -48,6 +49,8 @@ import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityMode
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelFromGivenMatrix;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelPiecewiseConstantWithMercurioModification;
 import net.finmath.montecarlo.interestrate.models.covariance.VolatilityReductionMercurioModel;
+import net.finmath.montecarlo.interestrate.products.Caplet;
+import net.finmath.montecarlo.interestrate.products.Caplet.ValueUnit;
 import net.finmath.montecarlo.process.EulerSchemeFromProcessModel;
 import net.finmath.optimizer.SolverException;
 import net.finmath.stochastic.RandomVariable;
@@ -139,7 +142,8 @@ public class LIBORMarketModelTestingMercurio {
 
 		LIBORMonteCarloSimulationFromLIBORModel simulationLiborModelNoVolReduction = new LIBORMonteCarloSimulationFromLIBORModel(liborMarketModelNoVolReduction, process2);
 
-		
+		DecimalFormat formatterTimeValue = new DecimalFormat("##0.00;");
+
 		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
 			int fixingBackwardIndex =  (liborIndex+1)*3;
 			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
@@ -148,7 +152,7 @@ public class LIBORMarketModelTestingMercurio {
 			RandomVariable backwardLookingRate =  simulationLiborModel.getLIBOR(fixingBackwardIndex, liborIndex);
 			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
 	
-			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + liborStartingTime+  ", " + liborEndingTime+ ") evaluated in t= " + fixingTime + ", vol. value " + volatilityBackwardLookingRate);
+			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime) + ", vol. value " + volatilityBackwardLookingRate);
 	    }
 		System.out.println("\n WITHOUT VOLATILITY REDUCTION: \n ");
 		
@@ -160,7 +164,7 @@ public class LIBORMarketModelTestingMercurio {
 			RandomVariable backwardLookingRate =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndex, liborIndex);
 			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
 	
-			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + liborStartingTime+  ", " + liborEndingTime+ ") evaluated in t= " + fixingTime + ", vol. value " + volatilityBackwardLookingRate);
+			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime) + ", vol. value " + volatilityBackwardLookingRate);
 	    }
 		System.out.println("\n check correct fixing, value should be the same as before: \n ");
 		
@@ -176,9 +180,12 @@ public class LIBORMarketModelTestingMercurio {
 
 			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
 	
-			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + liborStartingTime+  ", " + liborEndingTime+ ") evaluated in t= " + fixingTime + ", vol. value " + volatilityBackwardLookingRate + " classical " + volatilityBackwardLookingRateClassical );
-	    }
-	}
+			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime)+ ", back. vol. value " + volatilityBackwardLookingRate + "is =? to LMM vol " + volatilityBackwardLookingRateClassical );
+
+			}
+		
+		}
+	
 
    
 	

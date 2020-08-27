@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,23 +50,23 @@ import net.finmath.montecarlo.BrownianMotion;
 import net.finmath.montecarlo.BrownianMotionView;
 import net.finmath.montecarlo.RandomVariableFactory;
 import net.finmath.montecarlo.RandomVariableFromArrayFactory;
-import net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModel;
 import net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModelWithMercurioModification;
 import net.finmath.montecarlo.interestrate.models.covariance.AbstractLIBORCovarianceModelParametric;
 import net.finmath.montecarlo.interestrate.models.covariance.BlendedLocalVolatilityModel;
 import net.finmath.montecarlo.interestrate.models.covariance.DisplacedLocalVolatilityModel;
 import net.finmath.montecarlo.interestrate.models.covariance.VolatilityReductionMercurioModel;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModel;
-import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModelExponentialDecay;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModelExponentialDecayWithMercurioModification;
-import net.finmath.montecarlo.interestrate.models.covariance.LIBORCovarianceModelExponentialForm5Param;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCovarianceModelFromVolatilityAndCorrelation;
-import net.finmath.montecarlo.interestrate.models.covariance.LIBORCovarianceModelStochasticVolatility;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModel;
-import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelPiecewiseConstant;
+import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelFourParameterExponentialFormWithMercurioModification;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelPiecewiseConstantWithMercurioModification;
+import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelTimeHomogenousPiecewiseConstantWithMercurioModification;
 import net.finmath.montecarlo.interestrate.products.AbstractLIBORMonteCarloProduct;
+import net.finmath.montecarlo.interestrate.products.Caplet;
 import net.finmath.montecarlo.interestrate.products.SwaptionSimple;
+import net.finmath.montecarlo.interestrate.products.CapletOnBackwardLookingRate.ValueUnit;
+import net.finmath.montecarlo.interestrate.products.CapletOnBackwardLookingRate;
 import net.finmath.montecarlo.process.EulerSchemeFromProcessModel;
 import net.finmath.optimizer.OptimizerFactory;
 import net.finmath.optimizer.OptimizerFactoryLevenbergMarquardt;
@@ -137,7 +138,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 	@Test
 	public void testATMSwaptionCalibration() throws CalculationException, SolverException {
 
-		final int numberOfPaths		= 20;
+		final int numberOfPaths		= 7500; // ideale è 10'000 paths!
 		final int numberOfFactors	= 1;
 
 		final long millisCurvesStart = System.currentTimeMillis();
@@ -155,7 +156,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		final AnalyticModel curveModel = getCalibratedCurve();
 
 		// Create the forward curve (initial value of the LIBOR market model)
-		final ForwardCurve forwardCurve = curveModel.getForwardCurve("ForwardCurveFromDiscountCurve(discountCurve-EUR,3M)");
+		final ForwardCurve forwardCurve = curveModel.getForwardCurve("ForwardCurveFromDiscountCurve(discountCurve-EUR,1D)");
 		final DiscountCurve discountCurve = curveModel.getDiscountCurve("discountCurve-EUR");
 		//		curveModel.addCurve(discountCurve.getName(), discountCurve);
 
@@ -173,7 +174,6 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		final ArrayList<String>				calibrationItemNames	= new ArrayList<>();
 		final ArrayList<CalibrationProduct>	calibrationProducts		= new ArrayList<>();
 
-//---> swapPeriodLength	= 0.5, penso non sia 6M nel nostro caso!
 		final double	swapPeriodLength	= 0.5;
 
 		final String[] atmExpiries = {
@@ -274,27 +274,22 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		 * Create a simulation time discretization
 		 */
 		// If simulation time is below libor time, exceptions will be hard to track.
-		final double lastTime	= 40.0;
-		final double dt		= 0.25;
-		final TimeDiscretizationFromArray timeDiscretizationFromArray = new TimeDiscretizationFromArray(0.0, (int) (lastTime / dt), dt);
-		final TimeDiscretization liborPeriodDiscretization = timeDiscretizationFromArray;
+		final double lastTime	= 21.0;
+		final double dtLibor	= 0.5;
+		final double dt	= 0.25;
+		final TimeDiscretization timeDiscretizationFromArray = new TimeDiscretizationFromArray(0.0, (int) (lastTime / dt), dt);
+		final TimeDiscretization liborPeriodDiscretization = new TimeDiscretizationFromArray(0.0, (int) (lastTime / dtLibor), dtLibor);
 		
-		//optionMaturityDiscretization = simulationTimeDiscretization
-		final TimeDiscretization optionMaturityDiscretization = new TimeDiscretizationFromArray(0.0, 0.25, 0.50, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0);
-		//TimeDiscretization timeToMaturityDiscretization = new TimeDiscretizationFromArray(0.00, 40, 1.0);
-		TimeDiscretization timeToMaturityDiscretization = new TimeDiscretizationFromArray(0.00, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 40.0);
-		
-		// praticamente timeToMaturityDiscretization ti dice a quale LIBOR ci stiamo riferendeo quindi se prendi una discretizzazione annuale significa che, se i libor sono trimestrali, partendo dAL TEMPO 0, i primi 4 libor avranno lo stesso valore della volatiltà poi i secondi 4, avranno un'altra volatilità è cosi via.. rappresenta l'asse vertical della tua idea delle volatilità del LIBOR, mentre la simulationDiscretization è l'asse orizzontale, cioè ti dice ogni quanto i valori della volatilità cambiano, se ad esempio trimestrale, significa che ogni volatilità resta la stesa per un trimestre di simulazione.
-		// ma per avere un piecewise constant trimestrale non basterebbe specificare quindi un timeToMaturityDiscretization? e optionMaturityDiscretization dovrebbe essere tipo (0,40).. NO! questo praticamente ti da una time-homogeneous piecewise constatn!!
-		// NB:timeToMaturityDiscretization è proprio time to maturity quindi assumendo sia trimestrale un L(0,1;0) prenderà il valore della volatilità con Index=4.
-		/*
-		 * Create Brownian motions
-		 */
 		final BrownianMotion brownianMotion = new net.finmath.montecarlo.BrownianMotionLazyInit(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */);
-		//final BrownianMotion brownianMotion = new net.finmath.montecarlo.BrownianMotionCudaWithHostRandomVariable(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */);
-		//final BrownianMotion brownianMotion = new net.finmath.montecarlo.BrownianMotionCudaWithRandomVariableCuda(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */);
 
-		final LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelPiecewiseConstantWithMercurioModification(timeDiscretizationFromArray, liborPeriodDiscretization,optionMaturityDiscretization,timeToMaturityDiscretization, 0.50 / 100);
+		// needed if you use LIBORVolatilityModelPiecewiseConstantWithMercurioModification: TimeDiscretization optionMaturityDiscretization = new TimeDiscretizationFromArray(0.0, 0.25, 0.50, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0);
+		TimeDiscretization timeToMaturityDiscretization = new TimeDiscretizationFromArray(0.00, 0.25, 0.5, 0.75, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9,00, 10.0, 12.5, 15.0, 20.0);
+		double[] arrayValues = new double [timeToMaturityDiscretization.getNumberOfTimes()];
+		for (int i=0; i<timeToMaturityDiscretization.getNumberOfTimes(); i++) {arrayValues[i]= 0.2/100;}
+
+		final LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelTimeHomogenousPiecewiseConstantWithMercurioModification(timeDiscretizationFromArray, liborPeriodDiscretization, timeToMaturityDiscretization, arrayValues);
+		//LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelFourParameterExponentialFormWithMercurioModification(timeDiscretizationFromArray, liborPeriodDiscretization, 0.20, 0.05, 0.10, 0.20, true);
+		//final LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelPiecewiseConstantWithMercurioModification(timeDiscretizationFromArray, liborPeriodDiscretization,optionMaturityDiscretization,timeToMaturityDiscretization, 0.50 / 100);
 		
 		final LIBORCorrelationModel correlationModel = new LIBORCorrelationModelExponentialDecayWithMercurioModification(timeDiscretizationFromArray, liborPeriodDiscretization, numberOfFactors, 0.05, false);
 		// Create a covariance model
@@ -304,14 +299,6 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		// Create blended local volatility model with fixed parameter (0=lognormal, > 1 = almost a normal model).
 		final AbstractLIBORCovarianceModelParametric covarianceModelDisplaced = new DisplacedLocalVolatilityModel(covarianceModelParametric, 1.0/0.25, false /* isCalibrateable */);
 		final AbstractLIBORCovarianceModelParametric covarianceModelReducedVolatility = new VolatilityReductionMercurioModel(covarianceModelDisplaced);
-//results: n' of paths 500
-//test fallisce con l'unica modifica di LIBORVolatilityModelPiecewiseConstantWithMercurioModification
-// ma succeed se poi inseriisci anche VolatilityReductionMercurioModel(covarianceModelParametric) 
-		
-// fallisce con covarianceModelReducedVolatility = new VolatilityReductionMercurioModel(covarianceModelDisplaced); mean deviation 0.069%
-	
-// fallisce ancora inserendo anche LIBORMarketModelFromCovarianceModelWithMercurioModification  (usa ancora VolatilityReductionMercurioModel(covarianceModelDisplaced) ); mean deviation 0.113%
-// stesso test ma con 1000 paths: fallisce ancora Mean Deviation: 0.192% ( più grande di prima )
 		
 		// Set model properties
 		final Map<String, Object> properties = new HashMap<>();
@@ -438,13 +425,38 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 			}
 		}
 		
-		//note that liborIndex start from 0 also in Mercurio case indeed, it corresponds to L(0,1;t) the difference is that this does not have to be fixed! 
-		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
-			double fixingTime=liborPeriodDiscretization.getTime(liborIndex+1);
-			RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(liborIndex+1, liborIndex);
-			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
-			System.out.println("vol. Backward, liborIndex " + liborIndex +", fixingTime " + fixingTime + ", vol. value " + volatilityBackwardLookingRate);
+		// CAPLET ON BACKWARD LOOKING RATE SEMESTRALI
+		DecimalFormat formatterTimeValue = new DecimalFormat("##0.00;");
+		DecimalFormat formatterVolValue = new DecimalFormat("##0.00000;");
+		double strike = 0.004783;
+	
+		//primo loop da i valori del caplet per maturity 1.5Y, 2Y, 2.5Y,.
+		for(int liborIndex=2; liborIndex<5; liborIndex++) {
+			double maturityMinusLengthLibor =liborPeriodDiscretization.getTime(liborIndex);
+			double fixBackwardTime=liborPeriodDiscretization.getTime(liborIndex+1);
+			CapletOnBackwardLookingRate caplet = new CapletOnBackwardLookingRate(maturityMinusLengthLibor, dtLibor, strike, dtLibor, false, ValueUnit.NORMALVOLATILITY);			
+			double impliedVol = caplet.getValue(simulationCalibrated);
+			System.out.println("Caplet on underlying B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", " + formatterTimeValue.format(fixBackwardTime) + "; " + formatterTimeValue.format(fixBackwardTime) + "), maturity: " + formatterTimeValue.format(fixBackwardTime) + ". Implied vol:" + formatterVolValue.format(impliedVol));
 		}
+		
+		//secondo loop da i valori del caplet per maturity 4Y,5Y,...,20Y
+		for(int liborIndex=5; liborIndex<liborPeriodDiscretization.getNumberOfTimes(); liborIndex+=2) {
+			double maturityMinusLengthLibor =liborPeriodDiscretization.getTime(liborIndex);
+			double fixBackwardTime=liborPeriodDiscretization.getTime(liborIndex+1);
+			CapletOnBackwardLookingRate caplet = new CapletOnBackwardLookingRate(maturityMinusLengthLibor, dtLibor, strike, dtLibor, false, ValueUnit.NORMALVOLATILITY );			
+			double impliedVol = caplet.getValue(simulationCalibrated);
+			System.out.println("Caplet on underlying B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", " + formatterTimeValue.format(fixBackwardTime) + "; " + formatterTimeValue.format(fixBackwardTime) + "), maturity: " + formatterTimeValue.format(fixBackwardTime) + ". Implied vol:" + formatterVolValue.format(impliedVol));
+		}
+		
+		
+		
+//		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
+//			RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(liborIndex+1, liborIndex);
+//			double volBackwardLookingRate = backwardLookingRate.getStandardDeviation();
+//			double fixBackwardTime=liborPeriodDiscretization.getTime(liborIndex+1);
+//			double startBackwardTime=liborPeriodDiscretization.getTime(liborIndex);
+//			System.out.println("B(" + formatterTimeValue.format(startBackwardTime) +", " + formatterTimeValue.format(fixBackwardTime) + "; " + formatterTimeValue.format(fixBackwardTime) + "): vol. value " + formatterVolValue.format(volBackwardLookingRate));
+//		}
 		
 		
 		System.out.println("Time required for calibration of curves.........: " + (millisCurvesEnd-millisCurvesStart)/1000.0 + " s.");
@@ -463,18 +475,17 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 	
 //------------------------------- getCalibratedCurve() -------------------------------
 	public AnalyticModel getCalibratedCurve() throws SolverException {
-		final String[] maturity					= { "12M", "15M", "18M", "21M", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "12Y", "15Y", "20Y", "25Y", "30Y", "40Y", "50Y" };
-		final String[] frequency				= { "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
-		final String[] frequencyFloat			= { "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly", "quarterly"};
-		final String[] daycountConventions		= { "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360", "E30/360"};
-		final String[] daycountConventionsFloat	= { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
-		final double[] rates					= { -0.00478, -0.00484, -0.00489, -0.00489, -0.00492, -0.00492, -0.0048, -0.00459, -0.00431, -0.00398, -0.00363, -0.00323, -0.00281, -0.00199, -0.00098, -0.00025, -0.00033, -0.00068, -0.00129, -0.00182 };
-
+		final String[] maturity					= { "7D", "14D", "21D", "1M", "2M", "3M", "4M", "5M", "6M", "7M", "8M", "9M", "12M", "15M", "18M", "21M", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "11Y", "12Y", "15Y", "20Y", "25Y", "30Y", "40Y", "50Y" };
+		final String[] frequency				= { "tenor", "tenor",  "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
+		final String[] frequencyFloat			= { "tenor", "tenor",  "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "tenor", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual", "annual"};
+		final String[] daycountConventions	    = { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
+		final String[] daycountConventionsFloat	= { "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360", "ACT/360"};
+		final double[] rates					= { -0.00553, -0.00553, -0.00553, -0.00553, -0.00555, -0.00556, -0.00559, -0.00564, -0.00568, -0.00572, -0.00577, -0.00581, -0.00592, -0.00601, -0.00608, -0.00613, -0.00619, -0.00627, -0.00622, -0.00606, -0.00582, -0.00553, -0.00519, -0.00482, -0.00442, -0.00402, -0.00362, -0.00261, -0.00189, -0.00197, -0.0023, -0.00286, -0.00333};
 		final HashMap<String, Object> parameters = new HashMap<>();
 
 		parameters.put("referenceDate", LocalDate.of(2020, Month.JULY, 31));
 		parameters.put("currency", "EUR");
-		parameters.put("forwardCurveTenor", "3M");
+		parameters.put("forwardCurveTenor", "1D");
 		parameters.put("maturities", maturity);
 		parameters.put("fixLegFrequencies", frequency);
 		parameters.put("floatLegFrequencies", frequencyFloat);
