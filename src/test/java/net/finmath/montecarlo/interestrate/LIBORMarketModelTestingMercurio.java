@@ -58,6 +58,7 @@ import net.finmath.time.Schedule;
 import net.finmath.time.ScheduleGenerator;
 import net.finmath.time.TimeDiscretization;
 import net.finmath.time.TimeDiscretizationFromArray;
+import net.finmath.time.TimeDiscretizationFromArray.ShortPeriodLocation;
 import net.finmath.time.businessdaycalendar.BusinessdayCalendarExcludingTARGETHolidays;
 
 /**
@@ -89,8 +90,8 @@ public class LIBORMarketModelTestingMercurio {
 //				liborDt 	);
 
 			
-		final TimeDiscretization timeDiscretizationFromArray = new TimeDiscretizationFromArray(0.0, (int) ((lastTime+20) / dt), dt);
-		final TimeDiscretization liborPeriodDiscretization = new TimeDiscretizationFromArray(0.0, (int) (lastTime / liborDt), liborDt);;
+		final TimeDiscretization timeDiscretizationFromArray = new TimeDiscretizationFromArray(0.0, 22, 0.33, ShortPeriodLocation.SHORT_PERIOD_AT_START);
+		final TimeDiscretization liborPeriodDiscretization = new TimeDiscretizationFromArray(0.0, 22, 0.43, ShortPeriodLocation.SHORT_PERIOD_AT_START);
 		
 		final TimeDiscretization optionMaturityDiscretization = new TimeDiscretizationFromArray(0.0, 0.25, 0.50, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0);
 		TimeDiscretization timeToMaturityDiscretization = new TimeDiscretizationFromArray(0.00, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 40.0);
@@ -142,47 +143,53 @@ public class LIBORMarketModelTestingMercurio {
 
 		LIBORMonteCarloSimulationFromLIBORModel simulationLiborModelNoVolReduction = new LIBORMonteCarloSimulationFromLIBORModel(liborMarketModelNoVolReduction, process2);
 
-		DecimalFormat formatterTimeValue = new DecimalFormat("##0.00;");
-
-		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
-			int fixingBackwardIndex =  (liborIndex+1)*3;
-			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
-			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
-			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
-			RandomVariable backwardLookingRate =  simulationLiborModel.getLIBOR(fixingBackwardIndex, liborIndex);
-			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
-	
-			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime) + ", vol. value " + volatilityBackwardLookingRate);
-	    }
-		System.out.println("\n WITHOUT VOLATILITY REDUCTION: \n ");
-		
-		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
-			int fixingBackwardIndex =  (liborIndex+1)*3;
-			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
-			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
-			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
-			RandomVariable backwardLookingRate =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndex, liborIndex);
-			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
-	
-			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime) + ", vol. value " + volatilityBackwardLookingRate);
-	    }
-		System.out.println("\n check correct fixing, value should be the same as before: \n ");
-		
-		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
-			int fixingBackwardIndexClassical=  (liborIndex+1)*3;
-			int fixingBackwardIndex =  (liborIndex+1)*4;
-			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
-			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
-			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
-			RandomVariable backwardLookingRate =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndexClassical, liborIndex);
-			RandomVariable backwardLookingRateClassical =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndex, liborIndex);
-			double volatilityBackwardLookingRateClassical = backwardLookingRateClassical.getVariance();
-
-			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
-	
-			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime)+ ", back. vol. value " + volatilityBackwardLookingRate + "is =? to LMM vol " + volatilityBackwardLookingRateClassical );
-
-			}
+		RandomVariable backwardLookingRate =  simulationLiborModelNoVolReduction.getLIBOR(3, 10);
+		System.out.println(backwardLookingRate);
+		RandomVariable backwardLookingRate2 =  simulationLiborModelNoVolReduction.getLIBOR(4, 10);
+		System.out.println(backwardLookingRate2);
+		RandomVariable backwardLookingRate3 =  simulationLiborModelNoVolReduction.getLIBOR(5, 10);
+		System.out.println(backwardLookingRate3);
+//		DecimalFormat formatterTimeValue = new DecimalFormat("##0.00;");
+//
+//		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
+//			int fixingBackwardIndex =  (liborIndex+1)*3;
+//			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
+//			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
+//			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
+//			RandomVariable backwardLookingRate =  simulationLiborModel.getLIBOR(fixingBackwardIndex, liborIndex);
+//			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
+//	
+//			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime) + ", vol. value " + volatilityBackwardLookingRate);
+//	    }
+//		System.out.println("\n WITHOUT VOLATILITY REDUCTION: \n ");
+//		
+//		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
+//			int fixingBackwardIndex =  (liborIndex+1)*3;
+//			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
+//			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
+//			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
+//			RandomVariable backwardLookingRate =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndex, liborIndex);
+//			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
+//	
+//			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime) + ", vol. value " + volatilityBackwardLookingRate);
+//	    }
+//		System.out.println("\n check correct fixing, value should be the same as before: \n ");
+//		
+//		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
+//			int fixingBackwardIndexClassical=  (liborIndex+1)*3;
+//			int fixingBackwardIndex =  (liborIndex+1)*4;
+//			double fixingTime=timeDiscretizationFromArray.getTime(fixingBackwardIndex);
+//			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
+//			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
+//			RandomVariable backwardLookingRate =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndexClassical, liborIndex);
+//			RandomVariable backwardLookingRateClassical =  simulationLiborModelNoVolReduction.getLIBOR(fixingBackwardIndex, liborIndex);
+//			double volatilityBackwardLookingRateClassical = backwardLookingRateClassical.getVariance();
+//
+//			double volatilityBackwardLookingRate = backwardLookingRate.getVariance();
+//	
+//			System.out.println("liborIndex " + liborIndex +" i.e. libor L(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(fixingTime)+ ", back. vol. value " + volatilityBackwardLookingRate + "is =? to LMM vol " + volatilityBackwardLookingRateClassical );
+//
+//			}
 		
 		}
 	
