@@ -91,8 +91,13 @@ public class VolatilityReductionMercurioModel extends AbstractLIBORCovarianceMod
 			final double simulationTime =  getTimeDiscretization().getTime(timeIndex);
 			final double liborEndTime = getLiborPeriodDiscretization().getTime(component+1);
 			final double liborStartTime = getLiborPeriodDiscretization().getTime(component);
-			final double Volatilityreduction = Math.min(Math.max(liborEndTime-simulationTime, 0)/(liborEndTime-liborStartTime), 1);
-		
+			
+/*
+ *  		apply volatility reduction function on the factorLoading of covarianceModel.
+ *   		volatility reduction function g(t)=min(\frac{(T_{i+1}-t)^+}{T_{j+1}-T_j},1) 
+ *   		the reduction thus apply only on the accrual period [T_i,T_{i+1}], otherwise = 1.
+ */			
+			final double Volatilityreduction = Math.min(Math.max(liborEndTime-simulationTime, 0)/(liborEndTime-liborStartTime), 1);		
 			for (int factorIndex = 0; factorIndex < factorLoading.length; factorIndex++) {
 				factorLoading[factorIndex] = factorLoading[factorIndex].mult(Volatilityreduction);
 			}

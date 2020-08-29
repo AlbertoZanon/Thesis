@@ -57,50 +57,18 @@ public class CapletOnBackwardLookingRate extends AbstractLIBORMonteCarloProduct 
 	 * @param isFloorlet If true, this object will represent a floorlet, otherwise a caplet.
 	 * @param valueUnit The unit of the value returned by the <code>getValue</code> method.
 	 */
-	public CapletOnBackwardLookingRate(final double maturity, final double periodLength, final double strike, final double daycountFraction, final boolean isFloorlet, final ValueUnit valueUnit) {
+	public CapletOnBackwardLookingRate(final double maturity, final double periodLength, final double strike, final double daycountFraction, final boolean isFloorlet) {
 		super();
 		this.maturity = maturity;
 		this.periodLength = periodLength;
 		this.strike = strike;
 		this.daycountFraction = daycountFraction;
 		this.isFloorlet = isFloorlet;
-		this.valueUnit = valueUnit;
+		this.valueUnit = ValueUnit.NORMALVOLATILITY;
 	}
 
-	/**
-	 * Create a caplet or a floorlet.
-	 *
-	 * A caplet pays \( max(L-K,0) * daycountFraction \) at maturity+periodLength
-	 * where L is fixed at maturity.
-	 *
-	 * A floorlet pays \( -min(L-K,0) * daycountFraction \) at maturity+periodLength
-	 * where L is fixed at maturity.
-	 *
-	 * This simplified constructor uses daycountFraction = periodLength.
-	 *
-	 * @param maturity The fixing date given as double. The payment is at the period end.
-	 * @param periodLength The length of the forward rate period in ACT/365 convention.
-	 * @param strike The strike given as double.
-	 * @param isFloorlet If true, this object will represent a floorlet, otherwise a caplet.
-	 */
-	public CapletOnBackwardLookingRate(final double maturity, final double periodLength, final double strike, final boolean isFloorlet) {
-		this(maturity, periodLength, strike, periodLength, isFloorlet, ValueUnit.VALUE);
-	}
 
-	/**
-	 * Create a caplet.
-	 *
-	 * A caplet pays \( max(L-K,0) * periodLength \) at maturity+periodLength
-	 * where L is fixed at maturity.
-	 *
-	 * @param maturity The fixing date given as double. The payment is at the period end.
-	 * @param periodLength The length of the forward rate period.
-	 * @param strike The strike given as double.
-	 */
-	public CapletOnBackwardLookingRate(final double maturity, final double periodLength, final double strike) {
-		this(maturity, periodLength, strike, false);
-	}
-
+	
 	/**
 	 * This method returns the value random variable of the product within the specified model, evaluated at a given evalutationTime.
 	 * Note: For a lattice this is often the value conditional to evalutationTime, for a Monte-Carlo simulation this is the (sum of) value discounted to evaluation time.
