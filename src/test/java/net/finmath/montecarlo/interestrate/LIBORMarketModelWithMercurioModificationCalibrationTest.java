@@ -64,8 +64,9 @@ import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityMode
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORVolatilityModelTimeHomogenousPiecewiseConstantWithMercurioModification;
 import net.finmath.montecarlo.interestrate.products.AbstractLIBORMonteCarloProduct;
 import net.finmath.montecarlo.interestrate.products.Caplet;
+import net.finmath.montecarlo.interestrate.products.Caplet.ValueUnit;
 import net.finmath.montecarlo.interestrate.products.SwaptionSimple;
-import net.finmath.montecarlo.interestrate.products.CapletOnBackwardLookingRate.ValueUnit;
+//import net.finmath.montecarlo.interestrate.products.CapletOnBackwardLookingRate.ValueUnit;
 import net.finmath.montecarlo.interestrate.products.CapletOnBackwardLookingRate;
 import net.finmath.montecarlo.process.EulerSchemeFromProcessModel;
 import net.finmath.optimizer.OptimizerFactory;
@@ -138,7 +139,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 	@Test
 	public void testATMSwaptionCalibration() throws CalculationException, SolverException {
 
-		final int numberOfPaths		= 7500; // ideale è 10'000 paths!
+		final int numberOfPaths		= 5000; // ideale è 10'000 paths!
 		final int numberOfFactors	= 1;
 
 		final long millisCurvesStart = System.currentTimeMillis();
@@ -178,12 +179,12 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 
 		final String[] atmExpiries = {
 				"1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M", "1M",
-				"2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", 
+//				"2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", "2M", 
 				"3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M", "3M",
 				"6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M", "6M",
-				"9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M",
+//				"9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M", "9M",
 				"1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", "1Y", 
-				"18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M",
+//				"18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M", "18M",
 				"2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y", "2Y",
 				"3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "3Y", "4Y",
 				"4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "4Y", "5Y", "5Y", "5Y", "5Y",
@@ -197,9 +198,9 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		final String[] atmTenors = {
 				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y", 
 				
-				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
-				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
-				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
+//				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
+//				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
+//				"1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
 
 				"1Y", "2Y","3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y",
 				"1Y", "2Y", "3Y", "4Y","5Y", "6Y", "7Y", "8Y", "9Y", "10Y", "15Y", "20Y", "25Y", "30Y", "1Y", "2Y", "3Y", "4Y", "5Y", "6Y",
@@ -217,16 +218,16 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		final double[] atmNormalVolatilities = {
 				0.0015335, 0.0015179, 0.0019499, 0.0024161, 0.0027817, 0.0031067, 0.0033722, 0.0035158, 0.0036656, 0.0037844, 0.00452, 0.0050913, 0.0054071, 0.0056496,
 				//next is 2M
-				0.0016709, 0.0016287, 0.0020182, 0.0024951, 0.002827, 0.0031023, 0.0034348, 0.0036183, 0.0038008, 0.0039155, 0.0046602, 0.0051981, 0.0055116, 0.0057249,
+//				0.0016709, 0.0016287, 0.0020182, 0.0024951, 0.002827, 0.0031023, 0.0034348, 0.0036183, 0.0038008, 0.0039155, 0.0046602, 0.0051981, 0.0055116, 0.0057249,
 				
 				0.0015543, 0.0016509, 0.0020863, 0.002587, 0.002949, 0.0032105, 0.0035338, 0.0037133, 0.0038475, 0.0040674, 0.0047458, 0.005276, 0.005476, 0.005793,
 				0.0016777, 0.001937, 0.0023423, 0.0027823, 0.0031476, 0.0034569, 0.0037466, 0.0039852, 0.0041802, 0.0043221, 0.0049649, 0.0054206, 0.0057009, 0.0059071,
 				//next is 9M
-				0.0017809, 0.0020951, 0.0024978, 0.0029226, 0.0032379, 0.0035522, 0.0038397, 0.0040864, 0.0043122, 0.0044836, 0.0050939, 0.0054761, 0.0057374, 0.0059448,
+//				0.0017809, 0.0020951, 0.0024978, 0.0029226, 0.0032379, 0.0035522, 0.0038397, 0.0040864, 0.0043122, 0.0044836, 0.0050939, 0.0054761, 0.0057374, 0.0059448,
 				
 				0.0020129, 0.0022865, 0.0027082, 0.0030921, 0.0033849, 0.0037107, 0.0039782, 0.0042058, 0.0044272, 0.0046082, 0.0051564, 0.0055307, 0.0057924, 0.0059811,
 				//next is 18M
-				0.0022824, 0.0025971, 0.0029895, 0.0033299, 0.0036346, 0.0039337, 0.0042153, 0.0044347, 0.0046686, 0.0048244, 0.0052739, 0.005604, 0.0058311, 0.0060011,
+//				0.0022824, 0.0025971, 0.0029895, 0.0033299, 0.0036346, 0.0039337, 0.0042153, 0.0044347, 0.0046686, 0.0048244, 0.0052739, 0.005604, 0.0058311, 0.0060011,
 			
 				0.0026477, 0.0029709, 0.0033639, 0.0036507, 0.0039096, 0.0041553, 0.0044241, 0.00462, 0.0048265, 0.004989, 0.005361, 0.0056565, 0.0058529, 0.0060102,
 				0.003382, 0.0036593, 0.0039353, 0.0041484, 0.0043526, 0.0045677, 0.004775, 0.0049506, 0.0051159, 0.0052722, 0.0055185, 0.0057089, 0.0058555, 0.0059432,
@@ -283,7 +284,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		final BrownianMotion brownianMotion = new net.finmath.montecarlo.BrownianMotionLazyInit(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */);
 
 		// needed if you use LIBORVolatilityModelPiecewiseConstantWithMercurioModification: TimeDiscretization optionMaturityDiscretization = new TimeDiscretizationFromArray(0.0, 0.25, 0.50, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0);
-		TimeDiscretization timeToMaturityDiscretization = new TimeDiscretizationFromArray(0.00, 0.25, 0.5, 0.75, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9,00, 10.0, 12.5, 15.0, 20.0);
+		TimeDiscretization timeToMaturityDiscretization = new TimeDiscretizationFromArray(0.00,  0.5,  1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9,00, 10.0, 12.5, 15.0, 21.0);
 		double[] arrayValues = new double [timeToMaturityDiscretization.getNumberOfTimes()];
 		for (int i=0; i<timeToMaturityDiscretization.getNumberOfTimes(); i++) {arrayValues[i]= 0.2/100;}
 
@@ -302,7 +303,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		
 		// Set model properties
 		final Map<String, Object> properties = new HashMap<>();
-//-->	
+	
 		System.out.println("Number of volatility parameters: " + volatilityModel.getParameter().length);
 
 		// Choose the simulation measure
@@ -431,10 +432,10 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		double strike = 0.004783;
 	
 		//primo loop da i valori del caplet per maturity 1.5Y, 2Y, 2.5Y,.
-		for(int liborIndex=2; liborIndex<5; liborIndex++) {
+		for(int liborIndex=0; liborIndex<5; liborIndex++) {
 			double maturityMinusLengthLibor =liborPeriodDiscretization.getTime(liborIndex);
 			double fixBackwardTime=liborPeriodDiscretization.getTime(liborIndex+1);
-			CapletOnBackwardLookingRate caplet = new CapletOnBackwardLookingRate(maturityMinusLengthLibor, dtLibor, strike, dtLibor, false, ValueUnit.NORMALVOLATILITY);			
+			Caplet caplet = new Caplet(maturityMinusLengthLibor, dtLibor, strike, dtLibor, false, ValueUnit.NORMALVOLATILITY);			
 			double impliedVol = caplet.getValue(simulationCalibrated);
 			System.out.println("Caplet on underlying B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", " + formatterTimeValue.format(fixBackwardTime) + "; " + formatterTimeValue.format(fixBackwardTime) + "), maturity: " + formatterTimeValue.format(fixBackwardTime) + ". Implied vol:" + formatterVolValue.format(impliedVol));
 		}
@@ -443,20 +444,35 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		for(int liborIndex=5; liborIndex<liborPeriodDiscretization.getNumberOfTimes(); liborIndex+=2) {
 			double maturityMinusLengthLibor =liborPeriodDiscretization.getTime(liborIndex);
 			double fixBackwardTime=liborPeriodDiscretization.getTime(liborIndex+1);
-			CapletOnBackwardLookingRate caplet = new CapletOnBackwardLookingRate(maturityMinusLengthLibor, dtLibor, strike, dtLibor, false, ValueUnit.NORMALVOLATILITY);			
+			Caplet caplet = new Caplet(maturityMinusLengthLibor, dtLibor, strike, dtLibor, false, ValueUnit.NORMALVOLATILITY);			
 			double impliedVol = caplet.getValue(simulationCalibrated);
 			System.out.println("Caplet on underlying B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", " + formatterTimeValue.format(fixBackwardTime) + "; " + formatterTimeValue.format(fixBackwardTime) + "), maturity: " + formatterTimeValue.format(fixBackwardTime) + ". Implied vol:" + formatterVolValue.format(impliedVol));
 		}
 		
+
+		int timeIndex =  2;
+		System.out.println(" \n Backward looking rate evaluated at the END of the accrual period:");
+		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
+			double evaluationTime=timeDiscretizationFromArray.getTime(timeIndex);
+			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
+			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
+			RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(timeIndex, liborIndex);
+			double avgBackwardLookingRate =backwardLookingRate.getAverage();
+			System.out.println("Backward B(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(evaluationTime) + ", avg. value " + avgBackwardLookingRate);
+			timeIndex +=  2;
+		}	
 		
-		
-//		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
-//			RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(liborIndex+1, liborIndex);
-//			double volBackwardLookingRate = backwardLookingRate.getStandardDeviation();
-//			double fixBackwardTime=liborPeriodDiscretization.getTime(liborIndex+1);
-//			double startBackwardTime=liborPeriodDiscretization.getTime(liborIndex);
-//			System.out.println("B(" + formatterTimeValue.format(startBackwardTime) +", " + formatterTimeValue.format(fixBackwardTime) + "; " + formatterTimeValue.format(fixBackwardTime) + "): vol. value " + formatterVolValue.format(volBackwardLookingRate));
-//		}
+		int timeIndex2 =  0;
+		System.out.println("\n Backward looking rate evaluated at the BEGIN of the accrual period:");
+		for(int liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
+			double evaluationTime=timeDiscretizationFromArray.getTime(timeIndex2);
+			double liborStartingTime=liborPeriodDiscretization.getTime(liborIndex);
+			double liborEndingTime=liborPeriodDiscretization.getTime(liborIndex+1);
+			RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(timeIndex2, liborIndex);
+			double avgBackwardLookingRate =backwardLookingRate.getAverage();
+			System.out.println("Backward B(" + formatterTimeValue.format(liborStartingTime) +  ", " + formatterTimeValue.format(liborEndingTime) + ") evaluated in t= " + formatterTimeValue.format(evaluationTime) + ", avg. value " + avgBackwardLookingRate);
+			timeIndex2 +=  2;
+		}
 		
 		
 		System.out.println("Time required for calibration of curves.........: " + (millisCurvesEnd-millisCurvesStart)/1000.0 + " s.");
