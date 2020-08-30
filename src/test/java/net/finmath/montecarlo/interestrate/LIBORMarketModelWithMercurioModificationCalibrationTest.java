@@ -322,7 +322,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		final double[] parameterLowerBound = new double[covarianceModelParametric.getParameterAsDouble().length];
 		final double[] parameterUpperBound = new double[covarianceModelParametric.getParameterAsDouble().length];
 		Arrays.fill(parameterStandardDeviation, 0.20/100.0);
-		Arrays.fill(parameterLowerBound, 0.0); 
+		Arrays.fill(parameterLowerBound, 0.0);  
 		Arrays.fill(parameterUpperBound, Double.POSITIVE_INFINITY);
 
 		//		optimizerFactory = new OptimizerFactoryCMAES(accuracy, maxIterations, parameterLowerBound, parameterUpperBound, parameterStandardDeviation);
