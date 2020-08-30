@@ -138,7 +138,7 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 	@Test
 	public void testATMSwaptionCalibration() throws CalculationException, SolverException {
 
-		final int numberOfPaths		= 1000; // ideale è 10'000 paths!
+		final int numberOfPaths		= 10000; // ideale è 10'000 paths!
 		final int numberOfFactors	= 1;
 
 		final long millisCurvesStart = System.currentTimeMillis();
@@ -430,11 +430,13 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 		DecimalFormat formatterVolValue = new DecimalFormat("##0.00000;");
 		DecimalFormat formatterAnalytic = new DecimalFormat("##0.000;");
 		DecimalFormat formatterPercentage = new DecimalFormat(" ##0.000%;-##0.000%", new DecimalFormatSymbols(Locale.ENGLISH));
-
+		double[] mktData = new double[] {/* 6M 0.00167, */ /* 12M*/ 0.00201, /* 18M*/ 0.00228, /* 2Y */ 0.00264, 0.0, /* 3Y */ 0.0033, /* 4Y */0.00406, /* 5Y */ 0.00455, /* 6Y - NA */ 0.0, /* 7Y */0.00513, /* 8Y- NA */0.0, /* 9Y */0.0, /* 10Y */0.00550,0.0,0.0,0.0,0.0, /* 15Y */0.00544,0.0,0.0,0.0,0.0, /* 20Y */0.0053,0.0,0.0,0.0};
+		
 		double strike = 0.004783;
 	
-		int liborIndex=0;
-		
+		int liborIndex=1;
+		int mktDataIndex = 0;
+
 		//Results with CALIBRATED model
 		System.out.println("\n results on CALIBRATED model \n");
 		while(liborIndex < liborPeriodDiscretization.getNumberOfTimes()) {
@@ -448,6 +450,8 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 				double impliedVolBackward = capletBackward.getValue(simulationCalibrated);
 				double analyticFormulaPaper = Math.sqrt(1+0.5/(fixBackwardTime*3));
 				double ratioImpliedVol = impliedVolBackward/impliedVolClassical;
+				
+				if (mktData[mktDataIndex] == 0.0) {
 				System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
 						+ formatterTimeValue.format(fixBackwardTime) + "; "
 						+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
@@ -457,6 +461,26 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 						+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
 						+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
 				liborIndex+=1;
+				mktDataIndex+=1;
+				}
+				else {
+					double ratioMktVol =impliedVolBackward/mktData[mktDataIndex];
+					System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+							+ formatterTimeValue.format(fixBackwardTime) + "; "
+							+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+							+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+							+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+							+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+							+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+							+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) 
+							+ " Mkt vol. " + mktData[mktDataIndex]
+							+ "Ratio Mkt: "	+ formatterAnalytic.format(ratioMktVol)	
+							+ "Error Mkt: "	+ formatterPercentage.format((ratioMktVol-analyticFormulaPaper)/ratioMktVol)
+							);
+					liborIndex+=1;
+					mktDataIndex+=1;
+				}
+				
 			}
 			else {	//secondo loop da i valori del caplet per maturity 4Y,5Y,...,21
 				double maturityMinusLengthLibor =liborPeriodDiscretization.getTime(liborIndex);
@@ -467,15 +491,36 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 				double impliedVolBackward = capletBackward.getValue(simulationCalibrated);
 				double analyticFormulaPaper = Math.sqrt(1+0.5/(fixBackwardTime*3));
 				double ratioImpliedVol = impliedVolBackward/impliedVolClassical;
-				System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
-						+ formatterTimeValue.format(fixBackwardTime) + "; "
-						+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
-						+ formatterPercentage.format(impliedVolBackward) + "  Classic"
-						+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
-						+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
-						+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
-						+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
-				liborIndex+=2;
+				if (mktData[mktDataIndex] == 0.0) {
+					System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+							+ formatterTimeValue.format(fixBackwardTime) + "; "
+							+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+							+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+							+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+							+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+							+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+							+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
+					liborIndex+=2;
+					mktDataIndex+=1;
+					}
+					else {
+						double ratioMktVol =impliedVolBackward/mktData[mktDataIndex];
+						System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+								+ formatterTimeValue.format(fixBackwardTime) + "; "
+								+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+								+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+								+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+								+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+								+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+								+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) 
+								+ "  Mkt vol. " + mktData[mktDataIndex]
+								+ "  Ratio Mkt: "	+ formatterAnalytic.format(ratioMktVol)	
+								+ "  Error Mkt: "	+ formatterPercentage.format((ratioMktVol-analyticFormulaPaper)/ratioMktVol)
+								);
+						liborIndex+=2;
+						mktDataIndex+=1;
+					}
+					
 			}
 		}
 		
@@ -499,7 +544,8 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 	
 		
 		//Results with NON calibrated model
-		liborIndex=0;
+		liborIndex=1;
+		mktDataIndex = 0;
 		System.out.println("\n results on NON-CALIBRATED model \n");
 		while(liborIndex < liborPeriodDiscretization.getNumberOfTimes()) {
 			if (liborIndex<5) {		//da i valori del caplet per maturity 1.5Y, 2Y, 2.5Y,.
@@ -512,15 +558,36 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 				double impliedVolBackward = capletBackward.getValue(simulationMercurioModelNONcalibrated);
 				double analyticFormulaPaper = Math.sqrt(1+0.5/(fixBackwardTime*3));
 				double ratioImpliedVol = impliedVolBackward/impliedVolClassical;
-				System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
-						+ formatterTimeValue.format(fixBackwardTime) + "; "
-						+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
-						+ formatterPercentage.format(impliedVolBackward) + "  Classic"
-						+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
-						+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
-						+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
-						+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
-				liborIndex+=1;
+				if (mktData[mktDataIndex] == 0.0) {
+					System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+							+ formatterTimeValue.format(fixBackwardTime) + "; "
+							+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+							+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+							+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+							+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+							+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+							+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
+					liborIndex+=1;
+					mktDataIndex+=1;
+					}
+					else {
+						double ratioMktVol =impliedVolBackward/mktData[mktDataIndex];
+						System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+								+ formatterTimeValue.format(fixBackwardTime) + "; "
+								+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+								+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+								+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+								+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+								+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+								+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) 
+								+ "  Mkt vol. " + formatterPercentage.format(mktData[mktDataIndex])
+								+ "  Ratio Mkt: "	+ formatterAnalytic.format(ratioMktVol)	
+								+ "  Error Mkt: "	+ formatterPercentage.format((ratioMktVol-analyticFormulaPaper)/ratioMktVol)
+								);
+						liborIndex+=1;
+						mktDataIndex+=1;
+					}
+					
 			}
 			else {	//secondo loop da i valori del caplet per maturity 4Y,5Y,...,21
 				double maturityMinusLengthLibor =liborPeriodDiscretization.getTime(liborIndex);
@@ -531,19 +598,38 @@ public class LIBORMarketModelWithMercurioModificationCalibrationTest {
 				double impliedVolBackward = capletBackward.getValue(simulationMercurioModelNONcalibrated);
 				double analyticFormulaPaper = Math.sqrt(1+0.5/(fixBackwardTime*3));
 				double ratioImpliedVol = impliedVolBackward/impliedVolClassical;
-				System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
-						+ formatterTimeValue.format(fixBackwardTime) + "; "
-						+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
-						+ formatterPercentage.format(impliedVolBackward) + "  Classic"
-						+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
-						+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
-						+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
-						+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
-				liborIndex+=2;
+				if (mktData[mktDataIndex] == 0.0) {
+					System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+							+ formatterTimeValue.format(fixBackwardTime) + "; "
+							+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+							+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+							+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+							+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+							+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+							+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) );
+					liborIndex+=2;
+					mktDataIndex+=1;
+					}
+					else {
+						double ratioMktVol =impliedVolBackward/mktData[mktDataIndex];
+						System.out.println("Caplet on B(" + formatterTimeValue.format(maturityMinusLengthLibor) + ", "
+								+ formatterTimeValue.format(fixBackwardTime) + "; "
+								+ "" + formatterTimeValue.format(fixBackwardTime) + "). Implied vols: Backward" 
+								+ formatterPercentage.format(impliedVolBackward) + "  Classic"
+								+ formatterPercentage.format(impliedVolClassical)+ "  Analytic result: " 
+								+ formatterAnalytic.format(analyticFormulaPaper)+  "  Ratio vol: "
+								+ formatterAnalytic.format(ratioImpliedVol) + "  Error:"
+								+ formatterPercentage.format((ratioImpliedVol-analyticFormulaPaper)/ratioImpliedVol) 
+								+ "  Mkt vol. " + formatterPercentage.format(mktData[mktDataIndex])
+								+ "  Ratio Mkt: "	+ formatterAnalytic.format(ratioMktVol)	
+								+ "  Error Mkt: "	+ formatterPercentage.format((ratioMktVol-analyticFormulaPaper)/ratioMktVol)
+								);
+						liborIndex+=2;
+						mktDataIndex+=1;
+					}
 			}
 		}
 		
-
 		int timeIndex =  2;
 		System.out.println(" \n Backward looking rate evaluated at the END of the accrual period:");
 		for( liborIndex=0; liborIndex<liborPeriodDiscretization.getNumberOfTimes()-1; liborIndex++) {
