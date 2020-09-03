@@ -84,7 +84,7 @@ import net.finmath.time.daycount.DayCountConvention_ACT_365;
  */
 public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 
-	private final int numberOfPaths		= 5000;
+	private final int numberOfPaths		= 1;
 	private final int numberOfFactors	= 1;
 
 	private static DecimalFormat formatterValue		= new DecimalFormat(" ##0.0000%;-##0.0000%", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -525,7 +525,346 @@ public class LIBORMarketModelWithTenorRefinementCalibrationTest {
 				simulationCalibrated = new LIBORMonteCarloSimulationFromTermStructureModel(liborMarketModelCalibrated, process);
 			}
 		}
-				System.out.println("\nValuation on calibrated model:");
+		if(test == 1) {
+			final LIBORVolatilityModel volatilityModel = new LIBORVolatilityModelPiecewiseConstant(timeDiscretizationFromArray, liborPeriodDiscretization, new TimeDiscretizationFromArray(0.00, 30, 1.0), new TimeDiscretizationFromArray(0.00, 40, 1.0), 0.40 / 100);
+			final LIBORCorrelationModel correlationModel = new LIBORCorrelationModelExponentialDecay(timeDiscretizationFromArray, liborPeriodDiscretization, numberOfFactors, 0.05, false);
+			// Create a covariance model
+			AbstractLIBORCovarianceModelParametric covarianceModelParametric = new LIBORCovarianceModelExponentialForm5Param(timeDiscretizationFromArray, liborPeriodDiscretization, numberOfFactors, new double[] { 0.20/100.0, 0.05/100.0, 0.10, 0.05/100.0, 0.10} );
+			covarianceModelParametric = new LIBORCovarianceModelFromVolatilityAndCorrelation(timeDiscretizationFromArray, liborPeriodDiscretization, volatilityModel, correlationModel);
+
+			// Create blended local volatility model with fixed parameter 0.0 (that is "lognormal").
+			final AbstractLIBORCovarianceModelParametric covarianceModelDisplaced = new DisplacedLocalVolatilityModel(covarianceModelParametric, 1.0/0.25, false /* isCalibrateable */);
+
+			// Set model properties
+			final Map<String, Object> properties = new HashMap<>();
+
+			final Double accuracy = new Double(1E-8);
+			final int maxIterations = 400;
+			final int numberOfThreads = 2;
+			final OptimizerFactory optimizerFactory = new OptimizerFactoryLevenbergMarquardt(maxIterations, accuracy, numberOfThreads);
+
+			final double[] parameterStandardDeviation = new double[covarianceModelParametric.getParameterAsDouble().length];
+			final double[] parameterLowerBound = new double[covarianceModelParametric.getParameterAsDouble().length];
+			final double[] parameterUpperBound = new double[covarianceModelParametric.getParameterAsDouble().length];
+			Arrays.fill(parameterStandardDeviation, 0.20/100.0);
+			Arrays.fill(parameterLowerBound, Double.NEGATIVE_INFINITY);
+			Arrays.fill(parameterUpperBound, Double.POSITIVE_INFINITY);
+
+			//optimizerFactory = new OptimizerFactoryCMAES(accuracy, maxIterations, parameterLowerBound, parameterUpperBound, parameterStandardDeviation);
+
+			// Set calibration properties (should use our brownianMotion for calibration - needed to have to right correlation).
+			final Map<String, Object> calibrationParameters = new HashMap<>();
+			calibrationParameters.put("accuracy", accuracy);
+			calibrationParameters.put("brownianMotion", brownianMotion);
+			calibrationParameters.put("optimizerFactory", optimizerFactory);
+			calibrationParameters.put("brownianMotion", new net.finmath.montecarlo.BrownianMotionLazyInit(timeDiscretizationFromArray, numberOfFactors, numberOfPaths, 31415 /* seed */));
+			properties.put("calibrationParameters", calibrationParameters);
+
+			/*
+			 * Create corresponding LIBOR Market Model
+			 */
+			final CalibrationProduct[] calibrationItemsLMM = new CalibrationProduct[calibrationItemNames.size()];
+			for(int i=0; i<calibrationItemNames.size(); i++) {
+				calibrationItemsLMM[i] = new CalibrationProduct(calibrationProducts.get(i).getProduct(), calibrationProducts.get(i).getTargetValue(), calibrationProducts.get(i).getWeight());
+			}
+			final TermStructureModel liborMarketModelCalibrated = new LIBORMarketModelFromCovarianceModel(
+					liborPeriodDiscretization,
+					curveModel,
+					forwardCurve, new DiscountCurveFromForwardCurve(forwardCurve),
+					covarianceModelDisplaced,
+					calibrationItemsLMM,
+					properties);
+
+			System.out.println("\nCalibrated parameters are:");
+			final double[] param = ((AbstractLIBORCovarianceModelParametric)((LIBORMarketModelFromCovarianceModel) liborMarketModelCalibrated).getCovarianceModel()).getParameterAsDouble();
+			//		((AbstractLIBORCovarianceModelParametric) liborMarketModelCalibrated.getCovarianceModel()).setParameter(param);
+			for (final double p : param) {
+				System.out.println(p);
+			}
+
+			final EulerSchemeFromProcessModel process = new EulerSchemeFromProcessModel( brownianMotion);
+			simulationCalibrated = new LIBORMonteCarloSimulationFromTermStructureModel(liborMarketModelCalibrated, process);
+		}
+		else if(test == 2) {
+			final TimeDiscretization shortRateVolTimeDis = new TimeDiscretizationFromArray(0.00, 0.50, 1.00, 2.00, 3.00, 4.00, 5.00, 7.00, 10.00, 15.00, 20.00, 25.00, 30.00, 35.00, 40.00, 45.00 );
+			final double[] shortRateVolatility = new double[shortRateVolTimeDis.getNumberOfTimes()];
+			final double[] meanReversion = new double[shortRateVolTimeDis.getNumberOfTimes()];
+			Arrays.fill(shortRateVolatility, 0.20 / 100);
+			Arrays.fill(meanReversion, 0.15);
+
+			final double[] initialParameters = new double[shortRateVolatility.length+1];
+			System.arraycopy(shortRateVolatility, 0, initialParameters, 0, shortRateVolatility.length);
+			initialParameters[initialParameters.length-1] = 0.15;
+
+			final int maxIterations = 400;
+			final double accuracy		= 1E-7;
+
+			final double[] calibrationTargetValues = new double[calibrationProducts.size()];
+			for(int i=0; i<calibrationTargetValues.length; i++) {
+				calibrationTargetValues[i] = calibrationProducts.get(i).getTargetValue().getAverage();
+			}
+
+			final double[] calibrationWeights = new double[calibrationProducts.size()];
+			for(int i=0; i<calibrationWeights.length; i++) {
+				calibrationWeights[i] = calibrationProducts.get(i).getWeight();
+			}
+
+			final int numberOfThreadsForProductValuation = 2 * Math.min(2, Runtime.getRuntime().availableProcessors());
+			final ExecutorService executor = Executors.newFixedThreadPool(numberOfThreadsForProductValuation);
+
+			/*
+			 * We allow for 5 simultaneous calibration models.
+			 * Note: In the case of a Monte-Carlo calibration, the memory requirement is that of
+			 * one model with 5 times the number of paths. In the case of an analytic calibration
+			 * memory requirement is not the limiting factor.
+			 */
+			final int numberOfThreads = 5;
+			final LevenbergMarquardt optimizer = new LevenbergMarquardt(initialParameters, calibrationTargetValues, maxIterations, numberOfThreads)
+			{
+				private static final long serialVersionUID = 7213979669076698360L;
+
+				// Calculate model values for given parameters
+				@Override
+				public void setValues(final double[] parameters, final double[] values) throws SolverException {
+
+					final double[] shortRateVolatility = new double[parameters.length-1];
+					final double[] meanReversion = new double[parameters.length-1];
+					System.arraycopy(parameters, 0, shortRateVolatility, 0, shortRateVolatility.length);
+					Arrays.fill(meanReversion, parameters[parameters.length-1]);
+
+					final ShortRateVolatilityModel volatilityModel = new ShortRateVolatilityModelAsGiven(
+							shortRateVolTimeDis,
+							shortRateVolatility,
+							meanReversion);
+
+					// Create a LIBOR market model with the new covariance structure.
+					final LIBORModel model = new HullWhiteModel(
+							liborPeriodDiscretization, curveModel, forwardCurve, discountCurve, volatilityModel, null);
+					final EulerSchemeFromProcessModel process = new EulerSchemeFromProcessModel( brownianMotion);
+					final LIBORMonteCarloSimulationFromLIBORModel liborMarketModelMonteCarloSimulation =  new LIBORMonteCarloSimulationFromLIBORModel(model, process);
+
+					final ArrayList<Future<Double>> valueFutures = new ArrayList<>(calibrationProducts.size());
+					for(int calibrationProductIndex=0; calibrationProductIndex<calibrationProducts.size(); calibrationProductIndex++) {
+						final int workerCalibrationProductIndex = calibrationProductIndex;
+						final Callable<Double> worker = new  Callable<Double>() {
+							@Override
+							public Double call() {
+								try {
+									return calibrationProducts.get(workerCalibrationProductIndex).getProduct().getValue(liborMarketModelMonteCarloSimulation);
+								} catch (final Exception e) {
+									// We do not signal exceptions to keep the solver working and automatically exclude non-working calibration products.
+									return calibrationProducts.get(workerCalibrationProductIndex).getTargetValue().getAverage();
+								}
+							}
+						};
+						if(executor != null) {
+							final Future<Double> valueFuture = executor.submit(worker);
+							valueFutures.add(calibrationProductIndex, valueFuture);
+						}
+						else {
+							final FutureTask<Double> valueFutureTask = new FutureTask<>(worker);
+							valueFutureTask.run();
+							valueFutures.add(calibrationProductIndex, valueFutureTask);
+						}
+					}
+					for(int calibrationProductIndex=0; calibrationProductIndex<calibrationProducts.size(); calibrationProductIndex++) {
+						try {
+							final double value = valueFutures.get(calibrationProductIndex).get();
+							values[calibrationProductIndex] = value;
+						}
+						catch (final InterruptedException | ExecutionException e) {
+							throw new SolverException(e);
+						}
+					}
+					System.out.println(this.getRootMeanSquaredError() + "\t" + Arrays.toString(values));
+				}
+			};
+
+			// Set solver parameters
+			optimizer.setWeights(calibrationWeights);
+			optimizer.setErrorTolerance(accuracy);
+			final double[] parameterSteps = new double[initialParameters.length];
+			Arrays.fill(parameterSteps, 1E-4);
+			optimizer.setParameterSteps(parameterSteps);
+
+			try {
+				optimizer.run();
+			}
+			catch(final SolverException e) {
+				throw new CalculationException(e);
+			}
+			finally {
+				if(executor != null) {
+					executor.shutdown();
+				}
+			}
+
+			// Get covariance model corresponding to the best parameter set.
+			final double[] bestParameters = optimizer.getBestFitParameters();
+
+			System.out.println("\nCalibrated parameters are:");
+			for (final double p : bestParameters) {
+				System.out.println(formatterParam.format(p));
+			}
+
+			final double[] shortRateVolatilityCalib = new double[bestParameters.length-1];
+			final double[] meanReversionCalib = new double[bestParameters.length-1];
+			System.arraycopy(bestParameters, 0, shortRateVolatilityCalib, 0, shortRateVolatilityCalib.length);
+			Arrays.fill(meanReversionCalib, bestParameters[bestParameters.length-1]);
+
+			final ShortRateVolatilityModel volatilityModelCalibrated = new ShortRateVolatilityModelAsGiven(
+					shortRateVolTimeDis,
+					shortRateVolatilityCalib,
+					meanReversionCalib);
+
+			// Create a LIBOR market model with the new covariance structure.
+			final LIBORModel modelCalibrated = new HullWhiteModel(
+					liborPeriodDiscretization, curveModel, forwardCurve, discountCurve, volatilityModelCalibrated, null);
+			final EulerSchemeFromProcessModel process = new EulerSchemeFromProcessModel( brownianMotion);
+			simulationCalibrated =  new LIBORMonteCarloSimulationFromLIBORModel(modelCalibrated, process);
+		}
+		else if(test == 3) {
+			final TimeDiscretization shortRateVolTimeDis = new TimeDiscretizationFromArray(0.00, 0.50, 1.00, 2.00, 3.00, 4.00, 5.00, 7.00, 10.00, 15.00, 20.00, 25.00, 30.00, 35.00, 40.00, 45.00 );
+			final double[] shortRateVolatility = new double[shortRateVolTimeDis.getNumberOfTimes()];
+			final double[] meanReversion = new double[shortRateVolTimeDis.getNumberOfTimes()];
+			Arrays.fill(shortRateVolatility, 0.40 / 100);
+			Arrays.fill(meanReversion, 0.15);
+
+			final double[] initialParameters = new double[2*shortRateVolatility.length];
+			System.arraycopy(shortRateVolatility, 0, initialParameters, 0, shortRateVolatility.length);
+			System.arraycopy(meanReversion, 0, initialParameters, shortRateVolatility.length, shortRateVolatility.length);
+
+			final int maxIterations = 400;
+			final double accuracy		= 1E-7;
+
+			final double[] calibrationTargetValues = new double[calibrationProducts.size()];
+			for(int i=0; i<calibrationTargetValues.length; i++) {
+				calibrationTargetValues[i] = calibrationProducts.get(i).getTargetValue().getAverage();
+			}
+
+			final double[] calibrationWeights = new double[calibrationProducts.size()];
+			for(int i=0; i<calibrationWeights.length; i++) {
+				calibrationWeights[i] = calibrationProducts.get(i).getWeight();
+			}
+
+			final int numberOfThreadsForProductValuation = 2 * Math.min(2, Runtime.getRuntime().availableProcessors());
+			final ExecutorService executor = Executors.newFixedThreadPool(numberOfThreadsForProductValuation);
+
+			/*
+			 * We allow for 5 simultaneous calibration models.
+			 * Note: In the case of a Monte-Carlo calibration, the memory requirement is that of
+			 * one model with 5 times the number of paths. In the case of an analytic calibration
+			 * memory requirement is not the limiting factor.
+			 */
+			final int numberOfThreads = 5;
+			final LevenbergMarquardt optimizer = new LevenbergMarquardt(initialParameters, calibrationTargetValues, maxIterations, numberOfThreads)
+			{
+				private static final long serialVersionUID = 4823173102012628165L;
+
+				// Calculate model values for given parameters
+				@Override
+				public void setValues(final double[] parameters, final double[] values) throws SolverException {
+
+					final double[] shortRateVolatility = new double[parameters.length/2];
+					final double[] meanReversion = new double[parameters.length/2];
+					System.arraycopy(parameters, 0, shortRateVolatility, 0, shortRateVolatility.length);
+					System.arraycopy(parameters, shortRateVolatility.length, meanReversion, 0, shortRateVolatility.length);
+
+					final ShortRateVolatilityModel volatilityModel = new ShortRateVolatilityModelAsGiven(
+							shortRateVolTimeDis,
+							shortRateVolatility,
+							meanReversion);
+
+					// Create a LIBOR market model with the new covariance structure.
+					final LIBORModel model = new HullWhiteModel(
+							liborPeriodDiscretization, curveModel, forwardCurve, discountCurve, volatilityModel, null);
+					final EulerSchemeFromProcessModel process = new EulerSchemeFromProcessModel( brownianMotion);
+					final LIBORMonteCarloSimulationFromLIBORModel liborMarketModelMonteCarloSimulation =  new LIBORMonteCarloSimulationFromLIBORModel(model, process);
+
+					final ArrayList<Future<Double>> valueFutures = new ArrayList<>(calibrationProducts.size());
+					for(int calibrationProductIndex=0; calibrationProductIndex<calibrationProducts.size(); calibrationProductIndex++) {
+						final int workerCalibrationProductIndex = calibrationProductIndex;
+						final Callable<Double> worker = new  Callable<Double>() {
+							@Override
+							public Double call() {
+								try {
+									return  calibrationProducts.get(workerCalibrationProductIndex).getProduct().getValue(liborMarketModelMonteCarloSimulation);
+								} catch (final Exception e) {
+									//									e.printStackTrace();
+									// We do not signal exceptions to keep the solver working and automatically exclude non-working calibration products.
+									return calibrationTargetValues[workerCalibrationProductIndex];
+								}
+							}
+						};
+						if(executor != null) {
+							final Future<Double> valueFuture = executor.submit(worker);
+							valueFutures.add(calibrationProductIndex, valueFuture);
+						}
+						else {
+							final FutureTask<Double> valueFutureTask = new FutureTask<>(worker);
+							valueFutureTask.run();
+							valueFutures.add(calibrationProductIndex, valueFutureTask);
+						}
+					}
+					for(int calibrationProductIndex=0; calibrationProductIndex<calibrationProducts.size(); calibrationProductIndex++) {
+						try {
+							final double value = valueFutures.get(calibrationProductIndex).get();
+							values[calibrationProductIndex] = value;
+						}
+						catch (final InterruptedException | ExecutionException e) {
+							throw new SolverException(e);
+						}
+					}
+					System.out.println(this.getRootMeanSquaredError() + "\t" + Arrays.toString(values));
+				}
+			};
+
+			// Set solver parameters
+			optimizer.setWeights(calibrationWeights);
+			optimizer.setErrorTolerance(accuracy);
+			final double[] parameterSteps = new double[initialParameters.length];
+			Arrays.fill(parameterSteps, 1E-4);
+			optimizer.setParameterSteps(parameterSteps);
+
+			try {
+				optimizer.run();
+			}
+			catch(final SolverException e) {
+				throw new CalculationException(e);
+			}
+			finally {
+				if(executor != null) {
+					executor.shutdown();
+				}
+			}
+
+			// Get covariance model corresponding to the best parameter set.
+			final double[] bestParameters = optimizer.getBestFitParameters();
+
+			System.out.println("\nCalibrated parameters are:");
+			for (final double p : bestParameters) {
+				System.out.println(formatterParam.format(p));
+			}
+
+			final double[] shortRateVolatilityCalib = new double[bestParameters.length/2];
+			final double[] meanReversionCalib = new double[bestParameters.length/2];
+			System.arraycopy(bestParameters, 0, shortRateVolatilityCalib, 0, shortRateVolatilityCalib.length);
+			System.arraycopy(bestParameters, shortRateVolatilityCalib.length, meanReversionCalib, 0, shortRateVolatilityCalib.length);
+
+			final ShortRateVolatilityModel volatilityModelCalibrated = new ShortRateVolatilityModelAsGiven(
+					shortRateVolTimeDis,
+					shortRateVolatilityCalib,
+					meanReversionCalib);
+
+			// Create a LIBOR market model with the new covariance structure.
+			final LIBORModel modelCalibrated = new HullWhiteModel(
+					liborPeriodDiscretization, curveModel, forwardCurve, discountCurve, volatilityModelCalibrated, null);
+			final EulerSchemeFromProcessModel process = new EulerSchemeFromProcessModel(brownianMotion);
+			simulationCalibrated =  new LIBORMonteCarloSimulationFromLIBORModel(modelCalibrated, process);
+		}
+
+
+		System.out.println("\nValuation on calibrated model:");
 		double deviationSum			= 0.0;
 		double deviationSquaredSum	= 0.0;
 		for (int i = 0; i < calibrationProducts.size(); i++) {
