@@ -324,6 +324,10 @@ public class LIBORMarketModelTimeHomogeneousJUNITCalibrationTest {
 		
 			DecimalFormat formatterTimeValue = new DecimalFormat("##0.00;");
 			DecimalFormat formatterVolValue = new DecimalFormat("##0.00000;");
+			System.out.println("\n Backward looking rate:");
+			RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(0.5, 0.5,1.0);
+			double avgBackwardLookingRate =backwardLookingRate.getAverage();
+			System.out.println("Backward " + avgBackwardLookingRate);
 
 
 	
@@ -351,10 +355,6 @@ public class LIBORMarketModelTimeHomogeneousJUNITCalibrationTest {
 		System.out.println("__________________________________________________________________________________________\n");
 
 		
-		System.out.println("\n Backward looking rate:");
-		RandomVariable backwardLookingRate =  simulationCalibrated.getLIBOR(0.5, 0.5,1.0);
-		double avgBackwardLookingRate =backwardLookingRate.getAverage();
-		System.out.println("Backward " + avgBackwardLookingRate);
 
 		
 			
