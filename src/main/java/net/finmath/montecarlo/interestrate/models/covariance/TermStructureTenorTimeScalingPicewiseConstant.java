@@ -26,7 +26,7 @@ public class TermStructureTenorTimeScalingPicewiseConstant implements TermStruct
 		super();
 		this.timeDiscretization = timeDiscretization;
 		timesIntegrated = new double[timeDiscretization.getNumberOfTimes()];
-		for(int timeIntervallIndex=0; timeIntervallIndex<timeDiscretization.getNumberOfTimeSteps(); timeIntervallIndex++) { 
+		for(int timeIntervallIndex=0; timeIntervallIndex<timeDiscretization.getNumberOfTimeSteps(); timeIntervallIndex++) {
 			timesIntegrated[timeIntervallIndex+1] = timesIntegrated[timeIntervallIndex] + (1.0+Math.min(Math.max(parameterScaling*parameters[timeIntervallIndex],floor),cap)) * (timeDiscretization.getTimeStep(timeIntervallIndex));
 			// su time-hom. LMM, parameters are = 0, quindi questo: timesIntegrated[timeIntervallIndex+1] = timesIntegrated[timeIntervallIndex] +(1-0.9)*(timeDiscretization.getTimeStep(timeIntervallIndex))
 		}
@@ -35,16 +35,31 @@ public class TermStructureTenorTimeScalingPicewiseConstant implements TermStruct
 	@Override
 	public double getScaledTenorTime(final double periodStart, final double periodEnd) {
 
-		final int timeStartIndex = timeDiscretization.getTimeIndexNearestLessOrEqual(periodStart);
-		final int timeEndIndex = timeDiscretization.getTimeIndexNearestLessOrEqual(periodEnd);
+		final double timeIntegratedStart;
+		{
+			final int timeStartIndex = timeDiscretization.getTimeIndex(periodStart);
+			if(timeStartIndex >= 0) {
+				timeIntegratedStart = timesIntegrated[timeStartIndex];
+			}
+			else {
+				int timeStartIndexLo = -timeStartIndex-2;
+				timeIntegratedStart = (timesIntegrated[timeStartIndexLo+1]-timesIntegrated[timeStartIndexLo])/timeDiscretization.getTimeStep(timeStartIndexLo)*(timeDiscretization.getTime(timeStartIndexLo+1)-periodStart);
+			}
+		}
 
-		if(timeDiscretization.getTime(timeStartIndex) != periodStart) {
-			System.out.println("*****S" + (periodStart));
+		final double timeIntegratedEnd;
+		{
+			final int timeEndIndex = timeDiscretization.getTimeIndex(periodEnd);
+			if(timeEndIndex >= 0) {
+				timeIntegratedEnd = timesIntegrated[timeEndIndex];
+			}
+			else {
+				int timeEndIndexLo = -timeEndIndex-2;
+				timeIntegratedEnd = (timesIntegrated[timeEndIndexLo+1]-timesIntegrated[timeEndIndexLo])/timeDiscretization.getTimeStep(timeEndIndexLo)*(periodEnd-timeDiscretization.getTime(timeEndIndexLo));
+			}
 		}
-		if(timeDiscretization.getTime(timeEndIndex) != periodEnd) {
-			System.out.println("*****E" + (periodStart));
-		}
-		final double timeScaled = timesIntegrated[timeEndIndex] - timesIntegrated[timeStartIndex];
+
+		final double timeScaled = timeIntegratedEnd - timeIntegratedStart;
 
 		return timeScaled;
 	}
@@ -54,9 +69,6 @@ public class TermStructureTenorTimeScalingPicewiseConstant implements TermStruct
 		return new TermStructureTenorTimeScalingPicewiseConstant(timeDiscretization, parameters);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.finmath.montecarlo.interestrate.models.covariance.TermStructureTenorTimeScalingInterface#getParameter()
-	 */
 	@Override
 	public double[] getParameter() {
 		final double[] parameter = new double[timeDiscretization.getNumberOfTimeSteps()];
