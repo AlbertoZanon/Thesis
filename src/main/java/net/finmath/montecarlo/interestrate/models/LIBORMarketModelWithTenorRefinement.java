@@ -399,7 +399,7 @@ public class LIBORMarketModelWithTenorRefinement extends AbstractProcessModel im
 			final RandomVariable		stateVariable			= getStateVariable(timeIndex, periodStart, 			periodEnd);
 
 			if(Double.isNaN(stateVariable.getAverage()) || Double.isNaN(stateVariablePrevious.getAverage())) {
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("State variable contains NaN value.");
 			}
 			
 			// Shift in indexing and/or tenor refinement 
