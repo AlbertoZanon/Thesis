@@ -30,7 +30,7 @@
 		<kotlin.version>1.2.0</kotlin.version>
 		<commons-math.version>3.6.1</commons-math.version>
 		<commons-lang.version>3.9</commons-lang.version>
-		<junit.version>4.12</junit.version>
+		<junit.version>4.13.1</junit.version>
 		<!-- maven plugins -->
 		<surefire-plugin.version>3.0.0-M4</surefire-plugin.version>
 		<surefire-report-plugin.version>3.0.0-M4</surefire-report-plugin.version>
