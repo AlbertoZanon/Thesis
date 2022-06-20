@@ -27,7 +27,7 @@
 		<src.test.java.dir>src/test/java</src.test.java.dir>
 		<src.main.kotlin.dir>src/main/kotlin</src.main.kotlin.dir>
 		<src.test.kotlin.dir>src/test/kotlin</src.test.kotlin.dir>
-		<kotlin.version>1.2.0</kotlin.version>
+		<kotlin.version>1.6.0</kotlin.version>
 		<commons-math.version>3.6.1</commons-math.version>
 		<commons-lang.version>3.9</commons-lang.version>
 		<junit.version>4.12</junit.version>
